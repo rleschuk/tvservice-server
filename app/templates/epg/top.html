@@ -1,0 +1,236 @@
+<style>
+  #top {
+    position: fixed;
+    top: -50px;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    height: 50px;
+    background-color: rgba(52,58,64,0.9);
+    box-shadow: black 0px 0px 8px;
+    display: flex;
+    overflow-y: hidden;
+    transition: top 1s;
+  }
+  #top .item {
+    height: 50px;
+    width: 50px;
+    min-width: 50px;
+    padding: 0;
+    color: white !important;
+    line-height: 48px;
+    box-shadow: none !important;
+  }
+  #top .item:hover,
+  #top .item:active {
+    background-color: rgba(130, 130, 130, 0.5);
+  }
+  #top .rotate {
+    transition:0.5s;
+    height: 100%;
+    width: 100%;
+  }
+  #top .rotate.active {
+    -o-transform:rotate(180deg);
+    -ms-transform:rotate(180deg);
+    -moz-transform:rotate(180deg);
+    -webkit-transform:rotate(180deg);
+    transform:rotate(180deg);
+  }
+  #top .user-client {
+    width: 100%;
+    padding: 7px;
+  }
+  #top .user-client select {
+    border: 0 !important;
+    -moz-appearance: none;
+    -webkit-appearance:none;
+    box-shadow: none !important;
+    padding: 0px 15px;
+    font-size: 150%;
+    color: white;
+    font-weight: bold;
+    background-color: rgba(255,255,255,0.2);
+  }
+  #top .user-client select option {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+  }
+  #left-menu {
+    width: 0;
+    height: 150%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1020;
+    background-color: rgba(52,58,64,0.9);
+    transition: width 0.5s;
+    overflow-x: hidden;
+    padding-top: 70px;
+    box-shadow: black 2px 0px 5px;
+  }
+  #left-menu .select-groups {
+    height: calc(70% - 70px);
+    overflow-y: auto;
+  }
+  #left-menu .group-item {
+    cursor: pointer;
+    color: #fff;
+    padding: 5px 15px;
+    min-width: 250px;
+    max-width: 250px;
+    font-size: 110%;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+  #left-menu .group-item:hover {
+    background-color: rgba(255,255,255,0.2);
+  }
+
+</style>
+
+<div id="top">
+  <a href="javascript:void(0)" onclick="openNav(this)" class="btn item">
+    <div class="rotate"><i class="fas fa-angle-double-right fa-lg"></i></div>
+  </a>
+  {% include "include/user_clients.html" %}
+  <a href="{{url_for('main.management')}}" class="btn item">
+    <div class=""><i class="fas fa-tasks fa-lg"></i></div>
+  </a>
+  <a href="{{url_for('auth.logout')}}" class="btn item">
+    <div class=""><i class="fas fa-sign-out-alt fa-lg"></i></div>
+  </a>
+</div>
+
+<div id="left-menu">
+  <div class="select-groups" id="select-groups"></div>
+</div>
+
+<script type="text/javascript">
+
+  function openNav(e) {
+    if ($("#left-menu").width() == 0) {
+      $(e).find('.rotate').addClass('active');
+      $("#left-menu").width(250);
+    } else {
+      $(e).find('.rotate').removeClass('active');
+      $("#left-menu").width(0)
+    }
+  }
+
+  function show_settings() {
+    $.ajax({
+      url: "",
+      async: false,
+      dataType: 'json',
+      success: function(data) {
+        $(".div_modal .div_modal_content").width("700px");
+        $(".div_modal .div_modal_content").height("500px");
+        $(".div_modal .div_modal_content").css("margin-top", ($(window).height() - 500) / 2);
+        $(".div_modal").find('h6').text('Настройки сервиса');
+        let html = '';
+        html += '<div style="background-color:white;padding:10px;height:420px;overflow:auto;">';
+        html += '<table class="table table-hover table-settings" width=100%>';
+        data.settings.forEach(function(element, index, array) {
+          html += '<tr><td colspan="2" style="font-weight:bold;">'+element.label+'</td></tr>';
+          let priv;
+          element.items.forEach(function(element, index, array) {
+            html += '<tr name="'+element.id+'" type="'+element.type+'">';
+            if (element.id.startsWith(priv+'.')) {
+              html += '<td width=70% style="padding-left:20px!important;">';
+            } else {
+              html += '<td width=70%>';
+              priv = element.id;
+            }
+            html += element.label+':<p class="text-muted">'+element.desc+'</p></td><td>';
+            if (element.type == 'text') {
+              html += '<input type="'+(element.option=='hidden' ? 'password' : 'text')+'" class="form-control" name="cfg_'+element.id+'" value="'+element.value+'">';
+            } else if (element.type == 'ipaddress') {
+              html += '<input type="text" class="form-control" name="cfg_'+element.id+'" value="'+element.value+'" pattern="^([0-9]{1,3}\.){3}[0-9]{1,3}$">';
+            } else if (element.type == 'number') {
+              html += '<input type="number" class="form-control" name="cfg_'+element.id+'" value="'+element.value+'">';
+            } else if (element.type == 'bool') {
+              html += '<label class="custom-control custom-checkbox">'+
+                      '<input type="checkbox" class="custom-control-input" name="cfg_'+element.id+'" '+ (element.value ? 'checked' : '') +'>'+
+                      '<span class="custom-control-indicator"></span>';
+            } else if (element.type == 'enum') {
+              html += '<select class="form-control" name="cfg_'+element.id+'">';
+              element.values.forEach(function(e, i, a) {
+                html += '<option value="'+i+'" '+(element.value == i ? 'selected' : '')+'>'+e+'</option>';
+              });
+              html += '</select>';
+            } else if (element.type == 'labelenum') {
+              html += '<select class="form-control" name="cfg_'+element.id+'">';
+              element.values.forEach(function(e, i, a) {
+                html += '<option value="'+e+'" '+(element.value == e ? 'selected' : '')+'>'+e+'</option>';
+              });
+            }
+            html += '</td></tr>';
+          })
+        });
+        html += '</table></div>';
+        html += '<div style="background-color:white;padding:10px;">'+
+                '<button class="btn btn-outline-success btn-block" onclick="save_settings()">Сохранить</button>'+
+                '</div>';
+        $(".div_modal .div_modal_body").html(html);
+        $(".div_modal").css("display","block");
+      },
+      error: function(xhr, status, error) {alert_error(xhr, status, error)}
+    });
+  }
+
+  function save_settings() {
+    data = {};
+    $('.div_modal').find('table').find('> tbody > tr').each(function() {
+      if (['text','number','ipaddress'].includes($(this).attr('type'))) {
+        data[$(this).attr('name')] = $(this).find('input').val();
+      } else if ($(this).attr('type') == 'bool') {
+        data[$(this).attr('name')] = $(this).find('input').prop('checked');
+      } else if (['enum','labelenum'].includes($(this).attr('type'))) {
+        data[$(this).attr('name')] = $(this).find('select').val();
+      }
+    });
+    $.ajax({
+      type: "POST",
+      url: "",
+      data: JSON.stringify(data),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json',
+      success:function(data) { },
+      error:function(xhr, status, error) {alert_error(xhr, status, error)}
+    });
+    $(".div_modal").css("display","none");
+  }
+
+  $.ajax({
+    url: '{{url_for("api.groupslist")}}?disable=false',
+    async: true,
+    dataType: 'json'
+  }).done(function(xhr) {
+    $('#select-groups')
+      .append($('<div class="group-item">')
+      .attr("name", "Все каналы")
+      .text("Все каналы"));
+    xhr.groups.forEach(function(e, i, a) {
+      $('#select-groups')
+        .append($('<div class="group-item">')
+        .attr("name",e.name)
+        .text(e.name));
+    });
+    $("div .group-item").click(function() {
+      Cookies.set('select_groups', $(this).attr('name'));
+      if ($(this).attr('name') == 'Все каналы') {
+        $(".content div.col-sm").css('display', 'block');
+      } else {
+        $(".content div.col-sm").css('display', 'none');
+        $('.content div.col-sm[group="'+$(this).attr('name')+'"]').css('display', 'block');
+      }
+    });
+    //if (!Cookies.get('select_groups') || Cookies.get('select_groups') == 'null') {
+    //  Cookies.set('select_groups', $("#select-groups option:first").val());
+    //}
+    //$('#select-groups').val(Cookies.get('select_groups')).change();
+    //$('#select-groups').val($("#select-groups option:first").val()).change();
+  });
+
+</script>

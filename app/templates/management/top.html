@@ -1,0 +1,218 @@
+<style>
+  #top {
+    position: fixed;
+    top: -50px;
+    right: 0;
+    left: 0;
+    z-index: 1030;
+    height: 50px;
+    background-color: rgba(52,58,64,0.9);
+    box-shadow: black 0px 0px 8px;
+    display: flex;
+    overflow-y: hidden;
+    transition: top 1s;
+  }
+  #top .item {
+    height: 50px;
+    width: 50px;
+    min-width: 50px;
+    padding: 0;
+    color: white !important;
+    line-height: 48px;
+    box-shadow: none !important;
+  }
+  #top .item:hover,
+  #top .item:active {
+    background-color: rgba(130, 130, 130, 0.5);
+  }
+  #top .rotate {
+    transition:0.5s;
+    height: 100%;
+    width: 100%;
+  }
+  #top .rotate.active {
+    -o-transform:rotate(180deg);
+    -ms-transform:rotate(180deg);
+    -moz-transform:rotate(180deg);
+    -webkit-transform:rotate(180deg);
+    transform:rotate(180deg);
+  }
+  #top .user-client {
+    width: 100%;
+    padding: 7px;
+  }
+  #top .user-client select {
+    border: 0 !important;
+    -moz-appearance: none;
+    -webkit-appearance:none;
+    padding: 0px 15px;
+    font-size: 150%;
+    color: white;
+    font-weight: bold;
+    background-color: rgba(255,255,255,0.2);
+  }
+  #top .user-client select option {
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+  }
+  #left-menu {
+    width: 0;
+    height: 150%;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1020;
+    background-color: rgba(52,58,64,0.9);
+    transition: width 0.5s;
+    overflow-x: hidden;
+    padding-top: 70px;
+    box-shadow: black 2px 0px 5px;
+  }
+  #left-menu .select-groups {
+    height: calc(70% - 70px);
+    overflow-y: auto;
+  }
+  #left-menu .group-item {
+    cursor: pointer;
+    color: #fff;
+    padding: 5px 15px;
+    min-width: 300px;
+    max-width: 300px;
+    font-size: 110%;
+    font-weight: bold;
+    transition: background-color 0.2s;
+    display: flex;
+  }
+  #left-menu .group-item:hover {
+    background-color: rgba(255,255,255,0.2);
+  }
+  #left-menu .group-item .left {
+    width: 100%;
+  }
+  #left-menu .group-item .right {
+    min-width: 50px;
+  }
+  #left-menu .group-item .right .left-checkbox {
+    min-height: 1rem;
+    padding-left: 0;
+    margin-right: 0;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  #left-menu .group-item .right .left-checkbox .left-control-indicator {
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #818181;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    vertical-align: middle;
+    box-shadow: #343a40 0px 0px 5px 1px;
+    top: -2px;
+    border-radius: 10px;
+  }
+  #left-menu .group-item .right .left-checkbox .left-control-indicator:after {
+    content: "";
+    position: absolute;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background-color: #f1f1f1;
+    left: -2px;
+    top: -3px;
+    -webkit-transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    border-radius: 15px;
+    box-shadow: #343a40 0px 0px 5px 2px;
+  }
+  #left-menu .group-item .right .left-checkbox .custom-control-input:checked ~ .left-control-indicator {
+    background-color: #28a745;
+    background-image: none;
+  }
+  #left-menu .group-item .right .left-checkbox .custom-control-input:checked ~ .left-control-indicator:after {
+    background-color: #f1f1f1;
+    left: 16px;
+  }
+</style>
+
+<div id="top">
+  <a href="javascript:void(0)" onclick="openNav(this)" class="btn item">
+    <div class="rotate"><i class="fas fa-angle-double-right fa-lg"></i></div>
+  </a>
+  {% include "include/user_clients.html" %}
+  <a href="{{url_for('main.epg')}}" class="btn item">
+    <div class=""><i class="fas fa-th-list fa-lg"></i></div>
+  </a>
+  <a href="{{url_for('auth.logout')}}" class="btn item">
+    <div class=""><i class="fas fa-sign-out-alt fa-lg"></i></div>
+  </a>
+</div>
+
+<div id="left-menu">
+  <div class="select-groups" id="select-groups">
+    <div class="group-item " onclick="load_removed(this)">
+      <div class="left">Удаленные</div>
+      <div class="right"></div>
+    </div>
+    <div class="group-item " onclick="load_content(this)">
+      <div class="left">Все каналы</div>
+      <div class="right"></div>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+
+  function openNav(e) {
+    if ($("#left-menu").width() == 0) {
+      $(e).find('.rotate').addClass('active');
+      $("#left-menu").width(300);
+    } else {
+      $(e).find('.rotate').removeClass('active');
+      $("#left-menu").width(0)
+    }
+  }
+
+  $.ajax({
+    url: "{{url_for('api.groupslist')}}",
+    async: false,
+    dataType: 'json'
+  }).done(function(data) {
+      groups_select = $('<select class="form-control" data="group"/>');
+      data.groups.forEach(function(e, i, a) {
+        groups_select.append($('<option/>', {value: e.id, text: e.name}));
+        $('#select-groups')
+          .append($('<div class="group-item '+ (e.id == active_group ? 'active' : '') +'">')
+            .append($('<div class="left">')
+              .attr('id', e.id)
+              .attr('onclick', "load_content(this)")
+              .text(e.name)) //.toUpperCase()
+            .append($('<div class="right">')
+              .append($('<label class="custom-control left-checkbox">')
+                .append('<input type="checkbox" class="custom-control-input" \
+                         onclick="group_toggle(this)" \
+                         id="' + e.id + '" ' + (!e.disable ? 'checked="checked"': '') + '>')
+                .append('<span class="left-control-indicator">'))));
+      });
+  }).fail(function(xhr, status, error) {
+    alert_error(xhr, status, error);
+  });
+
+  function group_toggle(e) {
+    $.ajax({
+      type: "POST",
+      url: '{{url_for("api.groups", group_id=0)}}'
+        .replace('/0', '/' + $(e).attr('id')),
+      data: JSON.stringify({ disable: !e.checked }),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json'
+    }).done(function(data) {
+
+    }).fail(function(xhr, status, error) {
+      alert_error(xhr, status, error)
+    })
+  }
+
+</script>

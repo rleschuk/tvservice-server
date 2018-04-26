@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/datatables.min.css') }}"/>
+    <style>
+      ::-webkit-scrollbar { width: 0 !important }
+      html {
+        font-size: 15px;
+        overflow-x: hidden;
+        min-height: 100%;
+      }
+      body {
+        background-color: #343a40;
+        min-height: 100%;
+      }
+      input, button, select, a {
+        /*border-radius: 0px !important*/
+      }
+      p {
+        padding: 0;
+        margin: 0;
+      }
+      .content {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        padding-top: 65px;
+        padding-left: 15px;
+        padding-right: 15px;
+        padding-bottom: 15px;
+      }
+      .mymodal {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        right: 0;
+        background-color: rgb(0,0,0);
+        background-color: rgba(0,0,0,0.4);
+        -webkit-animation-name: fadeIn;
+        -webkit-animation-duration: 0.4s;
+        animation-name: fadeIn;
+        animation-duration: 0.4s;
+        z-index:1500;
+        flex-direction: column;
+        padding: 10px;
+      }
+      .mymodal .mymodal-content {
+        margin: auto;
+        /*max-width: 300px;*/
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+      }
+      .mymodal .mymodal-header {
+        display: flex;
+        padding: 0px 0px 10px 0px;
+        font-size: 120%;
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .mymodal .mymodal-header .header-title {
+        width: 100%;
+      }
+      .mymodal .mymodal-header .header-close {
+        padding-left: 20px;
+        cursor: pointer;
+      }
+      .mymodal .mymodal-body {
+        display: flex;
+        flex-direction: column;
+        padding: 3px;
+        overflow-y: scroll;
+      }
+      .mymodal .mymodal-spacer {
+        flex: 1;
+        pointer-events: none;
+      }
+      .bootbox {
+        z-index: 3000;
+        padding: 20px !important;
+      }
+      .bootbox .modal-dialog {
+        margin: 10% auto;
+      }
+      .bootbox .close {
+        margin: 0 !important;
+      }
+      /*
+      .modal-spacer {
+        pointer-events:none;
+        flex: 1;
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: auto;
+        padding: 0px;
+        border: 1px solid #888;
+        border-radius: 0px;
+        height: 470px;
+        width: 400px;
+      }
+      .modal-header {
+        padding: 7px 5px;
+        background-color: #343a40;
+        color: white;
+        border-radius: 0px;
+        height: 30px;
+      }
+      .modal-body {
+        text-align: center !important;
+        height: 100%;
+        flex: 1;
+        flex-direction: column;
+        display: flex;
+        padding: 10px;
+      }
+      .modal-close {
+        color: white;
+        float: right;
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: -10px;
+      }
+      .modal-close:hover,
+      .modal-close:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      */
+      .btn {
+        padding-left: 7px;
+        padding-right: 7px;
+      }
+      .btn:focus {
+        box-shadow: none;
+      }
+      .form-control {
+        background-color: rgba(255,255,255,0.2);
+        border: 0;
+        /*color: white;*/
+        box-shadow: black 0px 0px 4px 0px;
+      }
+      .form-control:focus {
+        box-shadow: black 0px 0px 4px 0px;
+      }
+      .input-group-append {
+        box-shadow: black 0px 0px 4px 0px;
+      }
+      @-webkit-keyframes fadeIn {
+        from {opacity: 0}
+        to {opacity: 1}
+      }
+      @keyframes fadeIn {
+        from {opacity: 0}
+        to {opacity: 1}
+      }
+      @media screen and (min-width: 1000px) {}
+    </style>
+    {% block styles %}{% endblock %}
+    <script src="{{ url_for('static',filename='js/jquery-3.2.1.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/tether.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/datatables.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/datatables.globals.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/fontawesome-all.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/js.cookie.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/interact.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/bootbox.min.js') }}"></script>
+    <script type="text/javascript">
+      function alert_error(xhr, status, error) {
+        console.error(error);
+        bootbox.alert(error);
+      }
+    </script>
+    {% block scripts %}{% endblock %}
+  </head>
+  <body>
+  {% block body %}{% endblock %}
+  <script type="text/javascript">
+    $(".mymodal .header-close").click( function(e) {
+      $(".mymodal").css("display","none");
+    });
+
+    $(window).click( function(e) {
+      if ($(e.target).is($(".mymodal"))) {
+        $(".mymodal").css("display","none");
+      }
+    });
+  </script>
+  </boby>
+</html>

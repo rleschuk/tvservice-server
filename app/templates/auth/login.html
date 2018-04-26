@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+<style>
+  .content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  .login {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    margin: auto;
+    min-height: 300px;
+    min-width: 300px;
+  }
+  .spacer {
+    flex: 1;
+  }
+  label {
+    color: black;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% from "include/_formhelpers.html" import render_field %}
+
+<div class="content">
+  <div class="spacer"></div>
+  <div class="login">
+    <div class="page-header">
+        <h1>Авторизация</h1>
+    </div>
+    <form method="POST" action="/auth/login">
+      {{ form.csrf_token }}
+      {{ render_field(form.username) }}
+      {{ render_field(form.password) }}
+      <div class="form-check">
+        {{ form.remember_me(class_="form-check-input") }}
+        {{ form.remember_me.label }}
+      </div>
+      <br>
+      {% include "include/flashes.html" %}
+      <br>
+      <div class="row">
+        <div class="col">
+          <p>Забыл пароль? <a href="{{ url_for('auth.password_reset_request') }}">Жми здесь</a>.</p>
+          <p>Новичек? <a href="{{ url_for('auth.register') }}">Зарегистрироваться</a>.</p>
+        </div>
+        <div class="col-sm-3">
+          {{ form.submit(class_="btn btn-primary float-right") }}
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="spacer"></div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block styles %}
+<style>
+  .content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  .register {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    margin: auto;
+    min-height: 370px;
+    width: 350px;
+  }
+  .spacer {
+    flex: 1;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="content">
+  <div class="spacer">{% include "include/flashes.html" %}</div>
+  <div class="register">
+    <div class="page-header"><h1>Регистрация</h1></div>
+    <form method="POST" action="/auth/register">
+      {{ form.csrf_token }}
+      {{ render_field(form.email) }}
+      {{ render_field(form.username) }}
+      {{ render_field(form.password) }}
+      {{ render_field(form.password2) }}
+      {{ form.submit(class_="btn btn-primary float-right") }}
+    </form>
+  </div>
+  <div class="spacer"></div>
+</div>
+{% endblock %}
+
+{% block bottom %}
+{% include "include/footer.html" %}
+{% endblock %}

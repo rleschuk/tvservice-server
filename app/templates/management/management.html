@@ -1,0 +1,500 @@
+{% extends "layout.html" %}
+
+{% block title %}Управление каналами{% endblock %}
+
+{% block styles %}
+<style>
+  html, body {
+    height: 100%;
+  }
+  .content {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  #row_channels {
+    display: none;
+  }
+  #channels thead {
+    display: none;
+  }
+  #channels tbody .disable {
+    min-width: 52px;
+    max-width: 52px;
+    width: 52px;
+  }
+  #channels tbody .disable .channel-checkbox {
+    min-height: 1rem;
+    padding-left: 0;
+    margin-right: 0;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  #channels tbody .disable .channel-checkbox .channel-control-indicator {
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 50px;
+    height: 35px;
+    background-color: #818181;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    vertical-align: middle;
+    top: 2px;
+    box-shadow: none;
+    border-radius: 20px;
+  }
+  #channels tbody .disable .channel-checkbox .channel-control-indicator:after {
+    content: "";
+    position: absolute;
+    display: inline-block;
+    width: 33px;
+    height: 33px;
+    background-color: #f1f1f1;
+    left: 1px;
+    top: 1px;
+    -webkit-transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    border-radius: 20px;
+    box-shadow: #343a40 0px 0px 4px 0px;
+  }
+  #channels tbody .disable .channel-checkbox .custom-control-input:checked ~ .channel-control-indicator {
+    background-color: #28a745;
+    background-image: none;
+  }
+  #channels tbody .disable .channel-checkbox .custom-control-input:checked ~ .channel-control-indicator:after {
+    background-color: #f1f1f1;
+    left: 16px;
+  }
+  #channels tbody .name .group {
+    padding: 0px;
+    min-width: 130px;
+    margin: 2px;
+    display: flex;
+
+  }
+  #channels tbody .name .group img {
+    border: 1px solid #888;
+    width: 35px;
+    min-width: 35px;
+    height: 35px;
+    margin-right: 4px;
+    border-radius: 4px;
+    box-shadow: black 0px 0px 4px 0px;
+  }
+  #channels tbody .name .channel {
+    padding: 0px;
+    min-width: 190px;
+    margin: 2px;
+  }
+  #channels td {
+    border: none;
+    padding: 2px
+  }
+  #channels_wrapper {
+    padding: 0;
+  }
+  #channels_wrapper .form-control {
+    color: white;
+  }
+  #channels_wrapper .form-control:focus {
+    color: black;
+  }
+  #channels_wrapper label {
+    color: white;
+  }
+  .dataTables_info {
+    color: white;
+  }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+  var groups_select;
+  //var epg_select;
+  //var clients = [];
+  var active_group = '{{current_app.config.get("CHANNEL_ACTIVE_GROUP")}}';
+  //var tg_channels = [];
+  var channels;
+</script>
+{% endblock %}
+
+{% block body %}
+{% include "include/flashes.html" %}
+{% include "management/top.html" %}
+{% include "management/modal_logo.html" %}
+{% include "management/modal_link.html" %}
+
+<div class="row content" id="row_channels">
+  <div class="col" style="padding: 0;">
+    <table id="channels" class="table" cellspacing="0" width="100%">
+      <thead>
+        <tr>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td class="disable"></td>
+          <td class="name"></td>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="text/javascript">
+  channels = $('#channels').DataTable({
+    data: [],
+    displayLength: 25,
+    language: GLOBAL_DT_LANG,
+    ordering: false,
+    columns: [
+      {'data': 'id', 'name': 'id', 'visible': false},
+      {'data': 'name', 'name': 'name', 'visible': false},
+      {'data': 'group_id', 'name': 'group_id', 'visible': false},
+      {'data': 'deleted', 'name': 'deleted', 'visible': false},
+      {'data': 'logo', 'name': 'logo', 'visible': false},
+      {'data': 'disable', 'name': 'disable', 'className': 'disable', 'render':
+        function(data, type, row, meta) {
+          if (type === 'display') {
+            data = $('<label class="custom-control channel-checkbox">')
+              .append('<input type="checkbox" class="custom-control-input" \
+                       onclick="channel_toggle(this)" \
+                       id="' + row.id + '" ' + (!row.disable ? 'checked="checked"' : '') + '>')
+              .append('<span class="channel-control-indicator">')
+              .get(0).outerHTML;
+          }
+          return data;
+        }
+      },
+      {'data': null, 'name': 'form', 'className': 'name', 'render':
+        function(data, type, row, meta) {
+          if (type === 'display') {
+            data = $('<div class="row" style="margin: 0px">')
+              .append($('<div class="col-sm-4 group">')
+                .append($('<img onclick="show_logo(this)" src="'+row.logo+'"/>'))
+                .append(groups_select.clone()))
+              .append($('<div class="col channel">')
+                .append($('<div class="input-group" style="flex-wrap:nowrap;">')
+                  .append('<input type="text" class="form-control" data="channel" \
+                           style="font-weight:bold;" name="'+row.name+'" value="'+row.name+'">')
+                  .append($('<div class="input-group-append">')
+                    .append($('<button type="button" class="btn btn-success" \
+                               onclick="show_links(this)">')
+                      .append('<i class="fas fa-link">'))
+                    .append($('<button type="button" class="btn ' + (row.epg_channel_id ? 'btn-success' : 'btn-danger') + '" \
+                               onclick="show_epg(this)">')
+                      .append('<i class="fa fa-map">'))
+                    .append($('<button class="btn btn-success" type="button" \
+                               onclick="channel_save(this)" name="'+row.name+'">')
+                      .append('<i class="fa fa-check">'))
+                    .append($('<button class="btn btn-danger" type="button" \
+                               onclick="channel_delete(this)">')
+                      .append('<i class="fa fa-times">')))));
+            data.find('select option[value='+ row.group_id +']').attr('selected', 'selected');
+            data = data.get(0).outerHTML;
+          }
+          return data;
+        }
+      },
+    ]
+  });
+
+/*
+  function load_tg_channels() {
+    $.ajax({
+      url: '',
+      async: false,
+      dataType: 'json',
+      success:function(data) {
+        tg_channels = data.teleguide.get_channels;
+        //console.log(tg_channels);
+      },
+      error:function(xhr, status, error) {alert_error(error)}
+    });
+  }
+
+  function get_tg_programms(channel_id) {
+    let result = {};
+    $.ajax({
+      url: '?channel_id='+channel_id,
+      async: false,
+      dataType: 'json',
+      success:function(data) { result = data.teleguide; },
+      error:function(xhr, status, error) {alert_error(error)}
+    })
+    return result;
+  }
+
+  function link_toggle(e) {
+    $.ajax({
+      url: '?id='+e.name+'&status='+e.checked,
+      async: false,
+      dataType: 'json',
+      success:function(data) { },
+      error:function(xhr, status, error) {alert_error(error)}
+    })
+  }
+
+  function link_reset(e) {
+    $.ajax({
+      url: '?id='+e.id,
+      async: false,
+      dataType: 'json',
+      success:function(data) { },
+      error:function(xhr, status, error) {alert_error(error)}
+    })
+  }
+*/
+
+  function set_channel_epg(e) {
+    $.ajax({
+      url: '?channel_id='+$(e).attr('channel_id')+'&id='+$(e).val(),
+      async: false,
+      dataType: 'json',
+      success:function(data) { },
+      error:function(xhr, status, error) {alert_error(xhr, status, error)}
+    })
+  }
+
+  function set_channel_name(row, name) {
+    let data = row.data();
+    $.ajax({
+      type: "POST",
+      url: '{{ url_for("api.channels", channel_id=0) }}'
+        .replace('/0', '/' + data.id),
+      data: JSON.stringify({ name: name }),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json',
+      success:function(data) {
+        channels.cell(row,'name:name').data(data.name);
+        channels.cell(row,'id:name').data(data.id);
+      },
+      error:function(xhr, status, error) {alert_error(xhr, status, error)}
+    });
+  }
+
+  function set_channel_group(row, id) {
+    let data = row.data();
+    $.ajax({
+      type: "POST",
+      url: '{{ url_for("api.channels", channel_id=0) }}'
+        .replace('/0', '/' + data.id),
+      data: JSON.stringify({ group_id: id }),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json',
+      success:function(data) {
+        channels.cell(row,'group_id:name').data(data.group_id);
+      },
+      error:function(xhr, status, error) {alert_error(xhr, status, error)}
+    });
+  }
+
+  function channel_save(e) {
+    let tr = $(e).closest('tr');
+    let row = channels.row(tr);
+    let data = row.data();
+    let channel = $(tr).find("input[data='channel']");
+    let group = $(tr).find("select[data='group']");
+    if (group.val() != data.group.id) {
+      set_channel_group(row, group.val());
+    }
+    if (channel.val() != data.name) {
+      set_channel_name(row, channel.val());
+    }
+    let i = 0;
+    channels.rows().every(function(rowIdx, tableLoop, rowLoop) {
+      let d = this.data();
+      if ((d.name == channel.val()) && (d.group.name == group.val())) {i++;}
+    });
+    if (i > 1) {
+      channels.row(tr).remove();
+      $(tr).hide();
+    }
+  }
+
+  function channel_toggle(e) {
+    let tr = $(e).closest('tr');
+    let data = channels.row(tr).data();
+    $.ajax({
+      type: "POST",
+      url: '{{ url_for("api.channels", channel_id=0) }}'
+        .replace('/0', '/' + data.id),
+      data: JSON.stringify({ disable: !e.checked }),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json'
+    }).done(function(data) {
+
+    }).fail(function(xhr, status, error) {
+      alert_error(xhr, status, error);
+    });
+  }
+
+  function channel_delete(e) {
+    let tr = $(e).closest('tr');
+    let data = channels.row(tr).data();
+    let msg = "Поместить канал в удаленные?";
+    if (data.deleted == true) { msg = "Восстановить канал из удаленных?"; }
+    bootbox.confirm({
+      size: "small",
+      message: msg,
+      buttons: {
+        confirm: {label: 'Да!', className: 'btn-success'},
+        cancel: {label: 'Неееет', className: 'btn-danger'}
+      },
+      callback: function(result) {if (result) {
+        $.ajax({
+          type: "POST",
+          url: '{{ url_for("api.channels", channel_id=0) }}'
+            .replace('/0', '/' + data.id),
+          data: JSON.stringify({deleted: !data.deleted}),
+          contentType: "application/json; charset=utf-8",
+          dataType: 'json'
+        }).done(function(data) {
+          channels.row(tr).remove();
+          $(tr).hide();
+        }).fail(function(xhr, status, error) {
+          alert_error(xhr, status, error);
+        });
+      }}
+    });
+  }
+
+  function show_epg(e) {
+    let tr = $(e).closest('tr')
+    let row = channels.row(tr);
+    let d = row.data();
+    $.ajax({
+      url: '?channel_id='+d.id,
+      async: false,
+      dataType: 'json',
+      success:function(data) {
+        let m_width = $(window).width()-100;
+        let m_height = $(window).height()-50;
+        let td_width = 260;
+        let td_cnt = parseInt(m_width/td_width);
+        let td_pos = 1;
+        $(".div_modal .div_modal_content").width(td_cnt * td_width + 18);
+        $(".div_modal .div_modal_content").height(m_height);
+        $(".div_modal .div_modal_content").css("margin-top", ($(window).height() - m_height) / 2);
+        $(".div_modal").find('h6').text(d.name + ' - ' + data.teleguide.get_id);
+        let html = '<div style="height:36px;padding:2px 3px 2px 1px;">'+
+                   '<select class="form-control" onchange="set_teleguide(this)" channel_id="'+d.id+'">'+
+                   '<option value="" selected></option>';
+        tg_channels.forEach(function(e, i, a) {
+          html += '<option value="'+e.id+'" '+(e.id == data.teleguide.get_id ? 'selected' : '')+'>'+e.name+'</option>';
+        });
+        html += '</select>';
+        html += '</div>';
+        html += '<div width=100% style="height:'+(m_height - 66)+'px;overflow:auto;">';
+        html += '<table class="tg" style="text-align:left;" width='+(td_cnt * td_width)+'px>';
+        data.teleguide.get_programms.forEach( function(e, i, a) {
+          let start_ = new Date(e.start_ * 1000);
+          start_ = ("0" + start_.getUTCHours()).substr(-2) +':'+ ("0" + start_.getUTCMinutes()).substr(-2);
+          let stop_ = new Date(e.stop_ * 1000);
+          stop_ = ("0" + stop_.getUTCHours()).substr(-2) +':'+ ("0" + stop_.getUTCMinutes()).substr(-2);
+          td = '<td width='+td_width+'px height='+td_width+'px>'+
+               '<div class="tg_item">'+
+               '<h5 class="tg_item_header">'+e.title+'</h5>'+
+               '<div class="tg_item_art" style="background-image: url('+e.art+');"></div>'+
+               '<div width=100% style="padding:5px 5px;">'+
+               '<p class="text-muted" style="margin:0;padding:0;">Жанр: '+e.cat+'</p>'+
+               '<p class="text-muted" style="margin:0;padding:0;">Начало: '+start_+' Конец: '+stop_+'</p>'+
+               '</div>'+
+               '</div><a class="tg_link" href="#" onclick="play_channel(this)" name="'+e.name+'"></a></td>';
+          if (td_pos == 1) {
+            html += '<tr>'+td;
+            td_pos = td_pos + 1;
+          } else if (td_pos < td_cnt) {
+            html += td;
+            td_pos = td_pos + 1;
+          } else if (td_pos == td_cnt) {
+            html += td+'</tr>';
+            td_pos = 1;
+          }
+        });
+        if (td_pos < td_cnt) { html += '</tr>'; }
+        html += '</table>';
+        html += '</div>';
+        $(".div_modal .div_modal_body").html(html);
+        $(".div_modal").css("display","block");
+      },
+      error:function(xhr, status, error) {alert_error(xhr, status, error)}
+    });
+  }
+
+  function show_logo(e) {
+    let tr = $(e).closest('tr');
+    let row = channels.row(tr);
+    let data = row.data();
+    $("#modal-logo .header-title").text(data.name);
+    $("#modal-logo .mymodal-img").attr('src', data.logo);
+    $("#modal-logo").css("display","flex");
+  }
+
+  function show_links(e) {
+    let tr = $(e).closest('tr')
+    let row = channels.row(tr);
+    let data = row.data();
+    $("#modal-link .header-title").text(data.name);
+    $("#modal-link").css("display","flex");
+    $("#modal-link .mymodal-body").height($("#modal-link").height()-20-37-40);
+    load_links(data);
+  }
+
+  function load_removed(e) {
+    $("div[name='cat-btn']").each(function() {
+      $(this).removeClass('active');
+    });
+    $(e).closest('.item').addClass('active');
+    $('#row_channels').fadeOut(250, function() {
+      $.ajax({
+        url: '{{ url_for("api.channelslist") }}?deleted=true',
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+          channels.clear().draw();
+          channels.rows.add(data.channels);
+          channels.columns.adjust().draw();
+        },
+        error: function(xhr, status, error) {alert_error(xhr, status, error)}
+      });
+    });
+    $('#row_channels').fadeIn(250);
+  }
+
+  function load_content(e) {
+    let group_id = '';
+    if (e) {
+      $("div[name='cat-btn']").each(function() {$(this).removeClass('active')});
+      $(e).closest('.item').addClass('active');
+      active_group = e.id;
+      if (e.id) { group_id = e.id; }
+      if (e.id == 'ВСЕ КАНАЛЫ') { group_id = ''; }
+    } else {
+      group_id = active_group;
+    }
+    $('#row_channels').fadeOut(250, function() {
+      $.ajax({
+        url: '{{ url_for("api.channelslist") }}?origins=true&group_id=' + group_id,
+        async: true,
+        dataType: 'json'
+      }).done(function(data) {
+        channels.clear().draw();
+        channels.rows.add(data.channels);
+        channels.columns.adjust().draw();
+        $('#row_channels').fadeIn(250);
+      }).fail(function(xhr, status, error) {
+        alert_error(xhr, status, error)
+      });
+    });
+  }
+
+  load_content();
+
+</script>
+
+{% endblock %}

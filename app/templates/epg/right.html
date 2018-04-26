@@ -1,0 +1,43 @@
+<style>
+  #scrollids {
+    height: 100%;
+    overflow: auto;
+    -ms-overflow-style: none;
+    overflow: -moz-scrollbars-none;
+  }
+  #scrollids::-webkit-scrollbar { width: 0 !important }
+  .fixed_button {
+    padding: 50px 4px 4px 4px;
+    border: 0;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 45px;
+    cursor: pointer;
+    position: fixed;
+    height: 100%;
+    top: 0;
+    right: 0;
+    z-index: 1020;
+    background-color: #343a40;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    font-size: 130%;
+  }
+</style>
+
+<div class="fixed_button">
+  <div id="scrolltop"><i class="fas fa-chevron-up fa-lg"></i></div>
+  <div id="scrollids"></div>
+  <div id="scrollbot"><i class="fas fa-chevron-down fa-lg"></i></div>
+</div>
+
+<script type="text/javascript">
+  $("#scrolltop").click(function() {
+    $("html").stop().animate({scrollTop:0}, 300, 'swing');
+  });
+  $("#scrollbot").click(function() {
+    $("html").stop().animate({scrollTop:$("html").height()}, 300, 'swing');
+  });
+</script>

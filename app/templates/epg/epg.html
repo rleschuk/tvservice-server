@@ -1,0 +1,306 @@
+{% extends "layout.html" %}
+
+{% block title %}Телегид{% endblock %}
+
+{% block styles %}
+<style>
+  .content {
+    padding-left: 5px;
+    padding-right: 0px;
+    padding-top: 55px;
+    padding-bottom: 0px;
+    width: calc(100% - 50px);
+  }
+
+  .col-sm {
+    min-width: 250px;
+    padding: 0px;
+    margin: 5px;
+    box-shadow: black 0px 0px 5px;
+    border-radius: 10px;
+  }
+  .details {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    -webkit-animation-name: fadeIn;
+    -webkit-animation-duration: 0.4s;
+    animation-name: fadeIn;
+    animation-duration: 0.4s;
+    z-index:1500;
+    flex-direction: column;
+  }
+  .details_content {
+    margin: auto 5%;
+    flex: 1;
+    color: white;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 5px;
+    height: 90%;
+  }
+  .details_body {
+    overflow-y: auto;
+    height: 100%;
+  }
+  .details_epg_item {
+    margin-bottom: 10px;
+  }
+  .details_epg_item .title {}
+  .details_epg_item .cat {
+    font-size:80%;
+  }
+  .details_epg_item .desc {
+    font-size:80%;
+  }
+  .epg {
+    /*border-radius: 5px;*/
+    background-color: #343a40;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border-radius: 10px;
+  }
+  .epg_channel {
+    color: white;
+    margin: 0;
+    padding: 8px;
+    font-size: 130%;
+    font-weight: bold;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+  .epg_channel:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+  }
+  .epg_art {
+    position: relative;
+    height: 250px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+    cursor: pointer;
+    border-radius: 10px;
+    filter: sepia(40%);
+  }
+  .epg_play {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+  }
+  .epg_play:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  .epg_progress {
+    height: 5px;
+    width: 0%;
+    background-color: red;
+    transition: width 0.5s;
+    border-radius: 1px;
+  }
+  .epg_programm {
+    position: absolute;
+    background-color: rgba(0,0,0,0.8);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    cursor: pointer;
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 9px;
+    transition: background-color 0.2s;
+    min-height: 57px;
+  }
+  .epg_programm:hover {
+    background-color: rgba(0,0,0,1);
+  }
+  .epg_title {
+    color: white;
+    font-weight: bold;
+    font-size: 110%;
+    padding: 3px 5px 0px 5px;
+  }
+  .epg_cat {
+    color: #868e96;
+    padding: 0px 5px 5px 5px;
+    font-size: 90%;
+  }
+  @media screen and (min-width: 1000px) {
+    .col-sm {
+      min-width: 200px;
+    }
+    .settings_content {
+      margin: auto 20%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% include "epg/top.html" %}
+{% include "epg/right.html" %}
+
+<div class="details">
+  <div style="height:5%;pointer-events:none;"></div>
+  <div class="details_content">
+    <div class="details_body"></div>
+  </div>
+  <div style="height:5%;pointer-events:none;"></div>
+</div>
+
+<script type="text/javascript">
+
+  $(window).click( function(e) {
+    if ($(e.target).is($(".details"))) {
+      $(".details").css("display","none");
+      $("body").css("overflow", "auto");
+    }
+    if ($(e.target).is($(".settings"))) {
+      $(".settings").css("display","none");
+      $("body").css("overflow", "auto");
+    }
+  });
+
+  $(".details").click( function(e) {
+    $(".details").css("display","none");
+    $("body").css("overflow", "auto");
+  });
+
+  $("#setting_close").click( function(e) {
+    $(".settings").css("display","none");
+    $("body").css("overflow", "auto");
+  });
+
+</script>
+
+<div class="row content"></div>
+
+<script type="text/javascript">
+
+  $.ajax({
+    url: '{{url_for("api.epgslist")}}',
+    async: false,
+    dataType: 'json'
+  }).done(function(data) {
+    let now = new Date();
+    let now_ = now.getTime();
+    data.epgs.forEach( function(e, i, a) {
+      let start_ = new Date(e.epg.date_start * 1000);
+      let stop_ = new Date(e.epg.date_stop * 1000);
+      let percent = Math.floor(100 * (now_ - (e.epg.date_start * 1000)) / ((e.epg.date_stop * 1000) - (e.epg.date_start * 1000)));
+      let art = e.epg.arts.length > 0 ? e.epg.arts[Math.floor(Math.random()*e.epg.arts.length)] : e.channel.logo;
+      $('.content').append($("<div></div>").attr("class","col-sm").attr("group",e.channel.group.name)
+        .append($('<div class="epg" start="'+e.epg.date_start+'" stop="'+e.epg.date_stop+'" id="'+e.channel.id+'">')
+          .append($('<div class="epg_art" style="background-image: url(' + art + ');">')
+            .append($('<div class="epg_channel">').html(e.channel.name))
+            .append($('<div class="epg_play" name="'+e.channel.name+'">')
+              .click(function(){KodiPlay(this)})))
+          .append($('<div class="epg_programm">')
+            .click(function(){ShowListEpgs(this)})
+            .append($('<div class="epg_progress" style="width:'+(percent > 100 ? 100 : percent)+'%">'))
+            .append($('<div name="title" class="epg_title">').html(e.epg.title))
+            .append($('<div name="cat" class="epg_cat">').html(e.epg.category)))));
+      if (!$('#scrollids').find('[name='+e.channel.name.charAt(0)+']').length) {
+        $('#scrollids')
+          .append($('<div class="scrollid"></div>')
+          .attr("name", e.channel.name.charAt(0))
+          .attr("cid", e.channel.id)
+          .text(e.channel.name.charAt(0))
+          .click(function(){$("html").stop()
+            .animate({
+              scrollTop: $("#" + $(this).attr("cid")).offset().top-54
+            }, 300, 'swing')
+          }));
+      }
+    });
+  }).fail(function(xhr, status, error) {
+    alert_error(xhr, status, error)
+  });
+
+
+  function ShowListEpgs(e) {
+    let channel_id = $(e).parent().attr("id");
+    $.ajax({
+      url: '{{url_for("api.epgs", channel_id=0)}}?limit=20'
+        .replace('/0', '/' + channel_id),
+      async: false,
+      dataType: 'json'
+    }).done(function(data) {
+      $(".details_body").empty();
+      data.epg.forEach( function(e, i, a) {
+        let start_ = new Date(e.date_start * 1000);
+        start_ = ("0" + start_.getHours()).substr(-2) +':'+ ("0" + start_.getMinutes()).substr(-2);
+        $(".details_body")
+          .append($('<div class="details_epg_item">')
+            .append($('<div class="title">')
+              .html('<b>'+start_+':</b> '+e.title))
+            .append($('<div class="cat">').html(e.category))
+            .append($('<div class="desc">').html(e.description)));
+      });
+      $(".details").css("display","flex");
+      $("body").css("overflow", "hidden");
+      $(".details_body").scrollTop(0);
+    }).fail(function(xhr, status, error) {
+      alert_error(error)
+    });
+  }
+
+
+  setInterval(function() {
+    $(".epg").each( function(i, e) {
+      let now = new Date();
+      let now_ = now.getTime(); // - (now.getTimezoneOffset() * 60000);
+      let start = parseInt($(e).attr("start"));
+      let stop = parseInt($(e).attr("stop"));
+      let channel_id = $(e).attr("id");
+      let progress = Math.floor(100 * (now_ - (start * 1000)) / ((stop * 1000) - (start * 1000)));
+      if (progress >= 100) {
+        $.ajax({
+          url: '{{url_for("api.epgs", channel_id=0)}}'
+            .replace('/0', '/' + channel_id),
+          async: true,
+          dataType: 'json'
+        }).done(function(d) {
+          let channel = d.channel;
+          let epg = d.epg[0];
+          let art = epg.arts.length > 0 ? epg.arts[Math.floor(Math.random()*epg.arts.length)] : channel.logo;
+          progress = Math.floor(100 * (now_ - (epg.date_start * 1000)) / ((epg.date_stop * 1000) - (epg.date_start * 1000)));
+          $("#" + channel.id).attr("start", epg.date_start);
+          $("#" + channel.id).attr("stop", epg.date_stop);
+          $("#" + channel.id).fadeOut(400, function() {
+            $("#" + channel.id).find(".epg_art").css('background-image','url('+art+')');
+            $("#" + channel.id).find(".epg_progress").css('width', progress + '%');
+            $("#" + channel.id).find("[name=title]").text(epg.title);
+            $("#" + channel.id).find("[name=cat]").text(epg.category);
+            $("#" + channel.id).find("[name=desc]").text(epg.description);
+          }).fadeIn(400);
+        }).fail(function(xhr, status, error) {
+          console.error(error);
+        });
+      } else {
+        $(e).find(".epg_progress").css('width', progress + '%');
+      }
+    });
+  }, 60000);
+
+</script>
+
+{% endblock %}

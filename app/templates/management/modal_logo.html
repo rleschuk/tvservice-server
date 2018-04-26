@@ -1,0 +1,41 @@
+<style>
+  .mymodal .mymodal-img {
+    width: 250px;
+    height: 250px;
+    margin-bottom: 10px;
+    box-shadow: black 0px 0px 5px 0px;
+    border-radius: 4px;
+  }
+  .mymodal .upload {}
+  .mymodal .upload-path {
+    display:none;
+  }
+</style>
+
+<div id="modal-logo" class="mymodal">
+  <div class="mymodal-spacer"></div>
+  <div class="mymodal-content">
+    <div class="mymodal-header">
+      <div class="header-title"></div>
+      <div class="header-close"><i class="fas fa-times fa-lg"></i></div>
+    </div>
+    <div class="mymodal-body">
+      <img class="mymodal-img" src="">
+      <button type="button" class="btn btn-outline-success upload">Загрузить</button>
+      <input type="file" class="upload-path" value=""/>
+    </div>
+  </div>
+  <div class="mymodal-spacer"></div>
+</div>
+
+<script type="text/javascript">
+
+  $('.upload').click(function() {
+    $('.upload-path').focus().trigger("click");
+  });
+
+  $('.upload-path').change(function() {
+    let fileName = $(this).val();
+  });
+
+</script>

@@ -1,0 +1,108 @@
+<style>
+  /*
+  .div_modal_body table.tg td {
+    padding: 1px !important;
+    vertical-align: top!important;
+    position: relative;
+  }
+  .div_modal_body table.tg td h5.tg_item_header {
+    color: white;
+    margin: 0;
+    padding: 8px;
+  }
+  .div_modal_body table.tg td div.tg_item {
+    background-color: #343a40;
+    height: 100%;
+  }
+  .div_modal_body table.tg td div.tg_item_art {
+    height: 200px;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 50%;
+  }
+  .div_modal_body table.tg td div.tg_item_progress {
+    height: 5px;
+    width: 0%;
+    background-color: red;
+  }
+  .div_modal_body table.tg td a.tg_link {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+  }
+  .div_modal_body table.tg td a.tg_link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+  */
+  .row.link {
+    margin: 0;
+    display: block;
+  }
+  .col-sm.info {
+    border: 1px solid black;
+    padding: 5px;
+  }
+  .col-sm.disable,
+  .col-sm.deleted {
+    border: 1px solid black;
+    padding: 5px;
+    max-width: 20px;
+  }
+</style>
+
+<div id="modal-link" class="mymodal">
+  <div class="mymodal-spacer"></div>
+  <div class="mymodal-content">
+    <div class="mymodal-header">
+      <div class="header-title"></div>
+      <div class="header-close"><i class="fas fa-times fa-lg"></i></div>
+    </div>
+    <div class="mymodal-body">
+      <table class="table">
+      </table>
+    </div>
+  </div>
+  <div class="mymodal-spacer"></div>
+</div>
+
+<script type="text/javascript">
+
+  function load_links(d) {
+    $.ajax({
+      url: '{{ url_for("api.channels", channel_id=0) }}'
+        .replace('/0', '/' + d.id),
+      async: true,
+      dataType: 'json'
+    }).done(function(data) {
+      /*
+        "resource": "mod_torrenttv",
+        "date_created": "2018-04-22 02:17:45.732256",
+        "cost": 1,
+        "date_modified": "2018-04-22 02:17:45.732270",
+        "disable": false,
+        "normalize": "amc",
+        "name": "AMC",
+        "deleted": false,
+        "id": 9463,
+        "link": "http://torrent-tv.ru/torrent-online.php?translation=6078&engine=acestream",
+        "channel_id": 2372
+      */
+      $('#modal-link table').empty();
+      data.origins.forEach(function(e) {
+        $('#modal-link table').append($('<tr>')
+          .append($('<td>').html(e.id))
+          .append($('<td>').html(e.disable))
+          .append($('<td>').html(e.deleted))
+          .append($('<td>')
+            .append($('<div style="font-size:110%">').html(e.name))
+            .append($('<div>').html('ресурс: '+e.resource))
+            .append($('<div>').html('приоритет: '+e.cost))
+            .append($('<div style="font-size:70%">').html('создан: '+e.date_created))
+            .append($('<div style="font-size:70%">').html('изменен: '+e.date_modified))
+          ));
+      });
+    });
+  }
+
+</script>
