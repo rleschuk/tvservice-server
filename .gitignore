@@ -1,5 +1,5 @@
-*.md5
-*.zip
+client/*.md5
+client/*.zip
 log
 
 ### Python ###
