@@ -1,3 +1,4 @@
+client/.gitignore
 client/*.md5
 client/*.zip
 log
