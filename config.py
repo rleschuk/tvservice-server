@@ -51,6 +51,22 @@ class Config:
     NORMALIZE_SUBREG = [(''':|;|"|'|`|!|\?|\.|,|\[|\]|\(|\)|\s+''', ''), (r'\s+', ' '), ('ё', 'е')]
     CHANNEL_ACTIVE_GROUP = 17
 
+    JOBS = [
+        {
+            'id': 'load_epgs',
+            'func': 'app.jobs:load_epgs',
+            'trigger': 'cron',
+            'hour': 2
+        },
+        {
+            'id': 'load_origins',
+            'func': 'app.jobs:load_origins',
+            'trigger': 'cron',
+            'hour': 3
+        },
+    ]
+    SCHEDULER_API_ENABLED = True
+
     @staticmethod
     def init_app(app):
         if not os.path.exists(app.config['TEMP_DIR']):

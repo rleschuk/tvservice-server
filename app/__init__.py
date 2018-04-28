@@ -5,11 +5,14 @@ from flask import Flask, Response, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from flask_login import LoginManager
+from flask_apscheduler import APScheduler
 from config import config
 
 
 mail = Mail()
 db = SQLAlchemy()
+scheduler = APScheduler()
+
 
 login_manager = LoginManager()
 #login_manager.login_view = 'auth.login'
@@ -40,6 +43,8 @@ def create_app(configuration=CONFIG):
     db.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+    scheduler.init_app(app)
+    scheduler.start()
 
     init_blueprints(app)
     init_logger(app)

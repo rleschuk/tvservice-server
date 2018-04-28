@@ -299,7 +299,7 @@
     let data = row.data();
     let channel = $(tr).find("input[data='channel']");
     let group = $(tr).find("select[data='group']");
-    if (group.val() != data.group.id) {
+    if (group.val() != data.group_id) {
       set_channel_group(row, group.val());
     }
     if (channel.val() != data.name) {
@@ -308,7 +308,7 @@
     let i = 0;
     channels.rows().every(function(rowIdx, tableLoop, rowLoop) {
       let d = this.data();
-      if ((d.name == channel.val()) && (d.group.name == group.val())) {i++;}
+      if ((d.name == channel.val()) && (d.group_name == group.val())) {i++;}
     });
     if (i > 1) {
       channels.row(tr).remove();
@@ -453,6 +453,27 @@
     $('#row_channels').fadeOut(250, function() {
       $.ajax({
         url: '{{ url_for("api.channelslist") }}?deleted=true',
+        async: false,
+        dataType: 'json',
+        success: function(data) {
+          channels.clear().draw();
+          channels.rows.add(data.channels);
+          channels.columns.adjust().draw();
+        },
+        error: function(xhr, status, error) {alert_error(xhr, status, error)}
+      });
+    });
+    $('#row_channels').fadeIn(250);
+  }
+
+  function load_unknown(e) {
+    $("div[name='cat-btn']").each(function() {
+      $(this).removeClass('active');
+    });
+    $(e).closest('.item').addClass('active');
+    $('#row_channels').fadeOut(250, function() {
+      $.ajax({
+        url: '{{ url_for("api.channelslist") }}?group_id=null',
         async: false,
         dataType: 'json',
         success: function(data) {

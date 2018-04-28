@@ -55,6 +55,7 @@ class Origin(db.Model):
                 if hasattr(origin, k):
                     setattr(origin, k, v)
         db.session.add(origin)
+        db.session.commit()
 
         from . import Channel
         channel = Channel.query.filter_by(normalize=origin.normalize).first()
@@ -69,7 +70,7 @@ class Origin(db.Model):
                 db.session.add(channel)
         elif not origin.channel:
             origin.channel = channel
-
+        db.session.commit()
         return origin
 
     def __repr__(self):

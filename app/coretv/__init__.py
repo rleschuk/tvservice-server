@@ -190,7 +190,7 @@ class ResourceBase(Base):
                     'resource': self.module,
                     'name': origin['name'],
                     'link': origin['link'],
-                    'logo': origin.get('logo', ''),
+                    #'logo': origin.get('logo', ''),
                     'cost': self.cost,
                 }
 
@@ -229,8 +229,8 @@ def load_origins(module=None):
         if hasattr(r['cls'], 'url') and r['cls'].url:
             try:
                 for origin in r['obj'].get_origins():
-                    Origin.create_origin(commit=False, **origin)
-                db.session.commit()
+                    Origin.create_origin(**origin)
+                #db.session.commit()
             except Exception:
                 tb = traceback.format_exc()
                 logger.error('%s\n%s', r, tb.strip())

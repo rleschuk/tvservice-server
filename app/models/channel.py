@@ -27,6 +27,10 @@ class Channel(db.Model):
         if not self.logo:
             self.logo = self.get_logo()
 
+    @property
+    def group_name(self):
+        return self.group.name if self.group else None
+
     def to_dict(self, origins=False, group=False, **kwargs):
         channel = {
             'id': self.id,
@@ -37,7 +41,7 @@ class Channel(db.Model):
             'logo': self.logo,
             'disable': self.disable,
             'deleted': self.deleted,
-            'group_name': self.group.name if self.group else None
+            'group_name': self.group_name
         }
         if group and self.group:
             channel['group'] = self.group.to_dict(**kwargs)

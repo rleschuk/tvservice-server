@@ -152,12 +152,16 @@
 
 <div id="left-menu">
   <div class="select-groups" id="select-groups">
+    <div class="group-item " onclick="load_content(this)">
+      <div class="left">Все каналы</div>
+      <div class="right"></div>
+    </div>
     <div class="group-item " onclick="load_removed(this)">
       <div class="left">Удаленные</div>
       <div class="right"></div>
     </div>
-    <div class="group-item " onclick="load_content(this)">
-      <div class="left">Все каналы</div>
+    <div class="group-item " onclick="load_unknown(this)">
+      <div class="left">На модерации</div>
       <div class="right"></div>
     </div>
   </div>
@@ -180,7 +184,8 @@
     async: false,
     dataType: 'json'
   }).done(function(data) {
-      groups_select = $('<select class="form-control" data="group"/>');
+      groups_select = $('<select class="form-control" data="group"/>')
+        .append($('<option/>'), {value: null, text: ''});
       data.groups.forEach(function(e, i, a) {
         groups_select.append($('<option/>', {value: e.id, text: e.name}));
         $('#select-groups')
