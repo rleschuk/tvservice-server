@@ -21,19 +21,17 @@ class ChannelsList(Resource):
 
         if isinstance(args.get('group_id'), int):
             query = query.filter(Group.id == args['group_id'])
-        elif args.get('group_id') is None:
+        elif 'group_id' in args and args['group_id'] is None:
             query = query.filter(Channel.group_id == None)
 
         if isinstance(args.get('deleted'), (int, bool)):
             query = query.filter(Channel.deleted == bool(args['deleted']))
+
         if isinstance(args.get('disable'), (int, bool)):
             query = query.filter(Channel.disable == bool(args['disable']))
 
         query = query.order_by(Channel.name)
-        return {'channels': [
-            c.to_dict(origins=request.args.get('origins', False))
-            for c in query.all()
-        ]}
+        return {'channels': [c.to_dict() for c in query.all()]}
 
 api.add_resource(ChannelsList, '/channels')
 

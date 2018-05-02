@@ -502,7 +502,7 @@
     }
     $('#row_channels').fadeOut(250, function() {
       $.ajax({
-        url: '{{ url_for("api.channelslist") }}?origins=true&group_id=' + group_id,
+        url: '{{ url_for("api.channelslist") }}?deleted=false&group_id=' + group_id,
         async: true,
         dataType: 'json'
       }).done(function(data) {

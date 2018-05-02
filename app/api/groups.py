@@ -13,23 +13,11 @@ from .. import db
 class GroupsList(Resource):
 
     @login_required
+    @admin_required
     def get(self):
         args = format_data(request.args.to_dict())
-        query = db.session.query(Group, UserGroups)\
-            .outerjoin(UserGroups, and_(Group.id == UserGroups.group_id,
-                                        UserGroups.user_id == current_user.id))
-        if not current_user.is_administrator():
-            subquery = db.session.query(Group.id).filter(Group.disable == False)
-            query = query.filter(Group.id.in_(subquery))
-        
-        #if isinstance(args.get('disable'), (int, bool)):
-        #    query = query.filter(Group.disable == bool(args.get('disable')))\
-        #                 .filter(or_(UserGroups.disable == bool(args.get('disable')),
-        #                             UserGroups.disable == None))
-
-        query = query.order_by(Group.name)
-        return {'groups': [{**g.to_dict(), **(u.to_dict() if u else {})}
-                           for g, u in query.all()]}
+        query = db.session.query(Group).order_by(Group.name)
+        return {'groups': [g.to_dict() for g in query.all()]}
 
 api.add_resource(GroupsList, '/groups')
 
@@ -57,6 +45,24 @@ class Groups(Resource):
         return group.to_dict()
 
 api.add_resource(Groups, '/groups/<int:group_id>')
+
+
+class UserGroupsList(Resource):
+
+    @login_required
+    def get(self):
+        args = format_data(request.args.to_dict())
+        query = db.session.query(Group, UserGroups)\
+            .outerjoin(UserGroups, and_(Group.id == UserGroups.group_id,
+                                        UserGroups.user_id == current_user.id))
+        if not current_user.is_administrator():
+            subquery = db.session.query(Group.id).filter(Group.disable == False)
+            query = query.filter(Group.id.in_(subquery))
+        query = query.order_by(Group.name)
+        return {'groups': [{**g.to_dict(), **(u.to_dict() if u else {})}
+                           for g, u in query.all()]}
+
+api.add_resource(UserGroupsList, '/usergroups')
 
 
 class UsersGroups(Resource):
