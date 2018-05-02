@@ -69,6 +69,8 @@ class UserChannelsList(Resource):
     def get_query():
         query = db.session.query(Channel, UserChannels)\
             .join(Group, Channel.group_id == Group.id)\
+            .outerjoin(UserGroups, and_(Group.id == UserGroups.group_id,
+                                        UserGroups.user_id == current_user.id))\
             .outerjoin(UserChannels, and_(Channel.id == UserChannels.channel_id,
                                           UserChannels.user_id == current_user.id))
         subchann = db.session.query(Channel.id)\
