@@ -21,9 +21,9 @@ class User(UserMixin, db.Model):
     location      = db.Column(db.String(64))
     member_since  = db.Column(db.DateTime(), default=datetime.utcnow)
     last_seen     = db.Column(db.DateTime(), default=datetime.utcnow)
-    user_groups   = db.relationship('UserGroups', order_by='UserGroups.group_id',
+    user_groups   = db.relationship('UserGroups',
                                     backref='user', lazy='dynamic')
-    user_channels = db.relationship('UserChannels', order_by='UserChannels.name',
+    user_channels = db.relationship('UserChannels',
                                     backref='user', lazy='dynamic')
 
     def __init__(self, **kwargs):
@@ -45,21 +45,21 @@ class User(UserMixin, db.Model):
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    def generate_confirmation_token(self, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps({'confirm': self.id}).decode('utf-8')
+    #def generate_confirmation_token(self, expiration=3600):
+    #    s = Serializer(current_app.config['SECRET_KEY'], expiration)
+    #    return s.dumps({'confirm': self.id}).decode('utf-8')
 
-    def confirm(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token.encode('utf-8'))
-        except:
-            return False
-        if data.get('confirm') != self.id:
-            return False
-        self.confirmed = True
-        db.session.add(self)
-        return True
+    #def confirm(self, token):
+    #    s = Serializer(current_app.config['SECRET_KEY'])
+    #    try:
+    #        data = s.loads(token.encode('utf-8'))
+    #    except:
+    #        return False
+    #    if data.get('confirm') != self.id:
+    #        return False
+    #    self.confirmed = True
+    #    db.session.add(self)
+    #    return True
 
     def generate_reset_token(self, expiration=3600):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -79,28 +79,27 @@ class User(UserMixin, db.Model):
         db.session.add(user)
         return True
 
-    def generate_email_change_token(self, new_email, expiration=3600):
-        s = Serializer(current_app.config['SECRET_KEY'], expiration)
-        return s.dumps(
-            {'change_email': self.id, 'new_email': new_email}).decode('utf-8')
+    #def generate_email_change_token(self, new_email, expiration=3600):
+    #    s = Serializer(current_app.config['SECRET_KEY'], expiration)
+    #    return s.dumps(
+    #        {'change_email': self.id, 'new_email': new_email}).decode('utf-8')
 
-    def change_email(self, token):
-        s = Serializer(current_app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token.encode('utf-8'))
-        except:
-            return False
-        if data.get('change_email') != self.id:
-            return False
-        new_email = data.get('new_email')
-        if new_email is None:
-            return False
-        if self.query.filter_by(email=new_email).first() is not None:
-            return False
-        self.email = new_email
-        self.avatar_hash = self.gravatar_hash()
-        db.session.add(self)
-        return True
+    #def change_email(self, token):
+    #    s = Serializer(current_app.config['SECRET_KEY'])
+    #    try:
+    #        data = s.loads(token.encode('utf-8'))
+    #    except:
+    #        return False
+    #    if data.get('change_email') != self.id:
+    #        return False
+    #    new_email = data.get('new_email')
+    #    if new_email is None:
+    #        return False
+    #    if self.query.filter_by(email=new_email).first() is not None:
+    #        return False
+    #    self.email = new_email
+    #    db.session.add(self)
+    #    return True
 
     def can(self, perm):
         return self.role is not None and self.role.has_permission(perm)
@@ -113,13 +112,12 @@ class User(UserMixin, db.Model):
         db.session.add(self)
 
     def to_dict(self):
-        user = {
+        return {
             'user_id': self.id,
             'username': self.username,
             'member_since': self.member_since.__str__(),
             'last_seen': self.last_seen.__str__()
         }
-        return user
 
     def generate_auth_token(self, expiration):
         s = Serializer(current_app.config['SECRET_KEY'],
@@ -140,15 +138,6 @@ class User(UserMixin, db.Model):
 
     @staticmethod
     def deploy_users():
-        if not User.query.filter_by(username='demo').first():
-            db.session.add(User(
-                email = 'demo',
-                username = 'demo',
-                password = 'demo',
-                confirmed = True,
-                name = 'demo'
-            ))
-            db.session.commit()
         if not User.query.filter_by(username='admin').first():
             db.session.add(User(
                 email = current_app.config['ADMIN_EMAIL'],
@@ -159,9 +148,8 @@ class User(UserMixin, db.Model):
             ))
             db.session.commit()
 
-        from . import UserClients, UserChannels
+        from . import UserClients
         UserClients.deploy_clients()
-        UserChannels.deploy_user_channels()
 
 
 class AnonymousUser(AnonymousUserMixin):

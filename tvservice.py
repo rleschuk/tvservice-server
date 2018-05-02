@@ -18,7 +18,7 @@ from app import create_app, db
 from app.models import (Origin, Group, Channel,
                         EpgChannel, Epg,
                         User, Role, Permission,
-                        UserChannels, UserClients)
+                        UserGroups, UserChannels, UserClients)
 
 app = create_app()
 migrate = Migrate(app, db)
@@ -29,7 +29,8 @@ def make_shell_context():
     return dict(db=db, Origin=Origin, Group=Group, Channel=Channel,
                 EpgChannel=EpgChannel, Epg=Epg,
                 User=User, Role=Role, Permission=Permission,
-                UserClients=UserClients, UserChannels=UserChannels)
+                UserClients=UserClients, UserGroups=UserGroups,
+                UserChannels=UserChannels)
 
 
 @app.cli.command()

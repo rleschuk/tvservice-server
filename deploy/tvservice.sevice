@@ -1,0 +1,14 @@
+[Unit]
+Description=uWSGI instance to serve tvservice
+After=network.target
+
+[Service]
+User=prod
+Group=prod
+WorkingDirectory=/opt/production/tvservice-server
+Environment="PATH=/opt/production/tvservice-server/venv/bin"
+ExecStart=/opt/production/tvservice-server/venv/bin/uwsgi --ini deploy/tvservice.ini
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=multi-user.target

@@ -18,7 +18,6 @@ class UserClients(db.Model):
 
     def to_dict(self):
         return {
-            'user_id': self.user_id,
             'host': self.host,
             'port': self.port,
             'name': self.client_name

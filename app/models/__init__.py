@@ -9,6 +9,3 @@ from .user import User, AnonymousUser
 from .user_clients import UserClients
 from .user_groups import UserGroups
 from .user_channels import UserChannels
-
-#from .settings import UserSettingsAttrs
-#from .user_settings import UserSettings

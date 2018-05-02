@@ -27,8 +27,8 @@ class Origin(db.Model):
         super(Origin, self).__init__(**kwargs)
         self.normalize = normalizing(self.name)
 
-    def to_dict(self, channel=False, **kwargs):
-        origin = {
+    def to_dict(self):
+        return {
             'id': self.id,
             'resource': self.resource,
             'name': self.name,
@@ -41,9 +41,6 @@ class Origin(db.Model):
             'date_modified': self.date_modified.__str__(),
             'channel_id': self.channel_id
         }
-        if channel:
-            origin['channel'] = self.channel.to_dict(**kwargs)
-        return origin
 
     @staticmethod
     def create_origin(name=None, resource=None, **kwargs):

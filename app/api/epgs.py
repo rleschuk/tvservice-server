@@ -2,48 +2,52 @@
 import datetime
 from flask import request, jsonify
 from flask_restful import Resource, abort
-from flask_login import current_user
+from flask_login import current_user, login_required
+from sqlalchemy import or_, and_
 from . import api
-from ..models import Channel, EpgChannel, Epg, Group, UserChannels
+from ..models import Channel, EpgChannel, Epg, Group, UserChannels, UserGroups
 from ..utils import json_loads
 from .. import db
+from ..decorators import admin_required
 
 
 class EpgsList(Resource):
+
+    @login_required
     def get(self):
-        if current_user.is_administrator():
-            query = db.session.query(Channel, Epg)\
-                .filter(Channel.deleted == False,
-                        Channel.epg_channel_id is not None)\
-                .join(Group, Channel.group_id == Group.id)\
-                .filter(Group.disable == False)\
-                .join(EpgChannel, EpgChannel.id == Channel.epg_channel_id)\
-                .join(Epg, Epg.epg_channel_id == EpgChannel.id)\
-                .filter(Epg.date_start <= datetime.datetime.now(),
-                        Epg.date_stop >= datetime.datetime.now())\
-                .order_by(Channel.name)
-        else:
-            query = db.session.query(UserChannels, Epg)\
-                .filter(UserChannels.user_id == current_user.id,
-                        UserChannels.deleted == False)\
-                .join(Channel, UserChannels.channel_id == Channel.id)\
-                .filter(Channel.epg_channel_id is not None)\
-                .join(Group, UserChannels.group_id == Group.id)\
-                .filter(Group.disable == False)\
-                .join(EpgChannel, EpgChannel.id == Channel.epg_channel_id)\
-                .join(Epg, Epg.epg_channel_id == EpgChannel.id)\
-                .filter(Epg.date_start <= datetime.datetime.now(),
-                        Epg.date_stop >= datetime.datetime.now())\
-                .order_by(UserChannels.name)
+        query = db.session.query(Channel, UserChannels, Group, UserGroups, Epg)\
+            .join(Group, Channel.group_id == Group.id)\
+            .outerjoin(UserGroups, and_(Group.id == UserGroups.group_id,
+                                        UserGroups.user_id == current_user.id))\
+            .outerjoin(UserChannels, and_(Channel.id == UserChannels.channel_id,
+                                          UserChannels.user_id == current_user.id))\
+            .outerjoin(EpgChannel, Channel.epg_channel_id == EpgChannel.id)\
+            .outerjoin(Epg, Epg.epg_channel_id == EpgChannel.id)\
+            .filter(or_(and_(Epg.date_start <= db.func.now(),
+                             Epg.date_stop >= db.func.now()),
+                        Epg.date_start == None))\
+            .filter(or_(UserGroups.disable == False, UserGroups.disable == None))
+        subchann = db.session.query(Channel.id)\
+            .filter(Channel.deleted == False)
+        if not current_user.is_administrator():
+            subgroup = db.session.query(Group.id)\
+                .filter(Group.disable == False)
+            subchann = subchann.filter(Channel.disable == False)
+            query = query.filter(Group.id.in_(subgroup))
+        query = query.filter(Channel.id.in_(subchann))
+        query = query.order_by(Channel.name)
         return jsonify(epgs=[{
-            'epg': epg.to_dict(),
-            'channel': channel.to_dict(group=True),
-        } for channel, epg in query.all()])
+            'channel': {**c.to_dict(), **(uc.to_dict() if uc else {})},
+            'group': {**g.to_dict(), **(ug.to_dict() if ug else {})},
+            'epg': e.to_dict() if e else None
+        } for c, uc, g, ug, e in query.all()])
 
 api.add_resource(EpgsList, '/epgs')
 
 
 class Epgs(Resource):
+
+    @login_required
     def get(self, channel_id):
         channel = Channel.query.filter_by(id=channel_id).first()
         if channel:
@@ -60,3 +64,40 @@ class Epgs(Resource):
         return abort(400, error='channel not found')
 
 api.add_resource(Epgs, '/epgs/<int:channel_id>')
+
+
+class UserEpgsList(Resource):
+
+    @staticmethod
+    def get_query():
+        query = db.session.query(Channel, Epg)\
+            .join(Group, Channel.group_id == Group.id)\
+            .outerjoin(UserGroups, and_(Group.id == UserGroups.group_id,
+                                        UserGroups.user_id == current_user.id))\
+            .outerjoin(UserChannels, and_(Channel.id == UserChannels.channel_id,
+                                          UserChannels.user_id == current_user.id))\
+            .join(EpgChannel, Channel.epg_channel_id == EpgChannel.id)\
+            .join(Epg, Epg.epg_channel_id == EpgChannel.id)\
+            .filter(Epg.date_stop >= db.func.now())\
+            .filter(or_(UserGroups.disable == False, UserGroups.disable == None))
+        subchann = db.session.query(Channel.id)\
+            .filter(Channel.deleted == False)
+        if not current_user.is_administrator():
+            subgroup = db.session.query(Group.id)\
+                .filter(Group.disable == False)
+            subchann = subchann.filter(Channel.disable == False)
+            query = query.filter(Group.id.in_(subgroup))
+        query = query.filter(Channel.id.in_(subchann))
+        query = query.order_by(Channel.name)
+        return query
+
+    @login_required
+    @admin_required
+    def get(self):
+        return jsonify(epgs=[{
+            'channel': {**c.to_dict(), **(uc.to_dict() if uc else {})},
+            'group': {**g.to_dict(), **(ug.to_dict() if ug else {})},
+            'epg': e.to_dict() if e else None
+        } for c, uc, g, ug, e in self.get_query().all()])
+
+api.add_resource(UserEpgsList, '/userepgs')

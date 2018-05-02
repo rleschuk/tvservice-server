@@ -77,14 +77,67 @@
     cursor: pointer;
     color: #fff;
     padding: 5px 15px;
-    min-width: 250px;
-    max-width: 250px;
+    min-width: 300px;
+    max-width: 300px;
     font-size: 110%;
     font-weight: bold;
     transition: background-color 0.2s;
+    display: flex;
+  }
+  #left-menu .active {
+    background-color: rgba(255,255,255,0.2);
   }
   #left-menu .group-item:hover {
     background-color: rgba(255,255,255,0.2);
+  }
+  #left-menu .group-item .left {
+    width: 100%;
+  }
+  #left-menu .group-item .right {
+    min-width: 50px;
+  }
+  #left-menu .group-item .right .left-checkbox {
+    min-height: 1rem;
+    padding-left: 0;
+    margin-right: 0;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  #left-menu .group-item .right .left-checkbox .left-control-indicator {
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #818181;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    vertical-align: middle;
+    box-shadow: #343a40 0px 0px 5px 1px;
+    top: -2px;
+    border-radius: 10px;
+  }
+  #left-menu .group-item .right .left-checkbox .left-control-indicator:after {
+    content: "";
+    position: absolute;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background-color: #f1f1f1;
+    left: -2px;
+    top: -3px;
+    -webkit-transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    border-radius: 15px;
+    box-shadow: #343a40 0px 0px 5px 2px;
+  }
+  #left-menu .group-item .right .left-checkbox .custom-control-input:checked ~ .left-control-indicator {
+    background-color: #28a745;
+    background-image: none;
+  }
+  #left-menu .group-item .right .left-checkbox .custom-control-input:checked ~ .left-control-indicator:after {
+    background-color: #f1f1f1;
+    left: 16px;
   }
 
 </style>
@@ -94,9 +147,11 @@
     <div class="rotate"><i class="fas fa-angle-double-right fa-lg"></i></div>
   </a>
   {% include "include/user_clients.html" %}
+  {% if current_user.is_administrator() %}
   <a href="{{url_for('main.management')}}" class="btn item">
     <div class=""><i class="fas fa-tasks fa-lg"></i></div>
   </a>
+  {% endif %}
   <a href="{{url_for('auth.logout')}}" class="btn item">
     <div class=""><i class="fas fa-sign-out-alt fa-lg"></i></div>
   </a>
@@ -111,7 +166,7 @@
   function openNav(e) {
     if ($("#left-menu").width() == 0) {
       $(e).find('.rotate').addClass('active');
-      $("#left-menu").width(250);
+      $("#left-menu").width(300);
     } else {
       $(e).find('.rotate').removeClass('active');
       $("#left-menu").width(0)
@@ -202,33 +257,64 @@
     $(".div_modal").css("display","none");
   }
 
+  function usergroup_toggle(e) {
+    $.ajax({
+      type: "POST",
+      url: '{{url_for("api.usersgroups", group_id=0)}}'
+        .replace('/0', '/' + $(e).attr('group_id')),
+      data: JSON.stringify({ disable: !e.checked }),
+      contentType: "application/json; charset=utf-8",
+      dataType: 'json'
+    }).done(function(data) {
+      console.log(data);
+    }).fail(function(xhr, status, error) {
+      alert_error(xhr, status, error)
+    })
+  }
+
+  function usergroup_select(e) {
+    $('div .group-item').removeClass('active');
+    $('div .group-item[name="'+$(e).attr('name')+'"]').addClass('active');
+    Cookies.set('select_groups', $(e).attr('name'));
+    let withoutepg = $('#without-epg').prop('checked');
+    $(".content div.col-sm")
+      .css('display', 'none');
+    $(".content div.col-sm"+(!withoutepg ? ":not(.without-epg)": '')+
+      ($(e).attr('name') == 'Все каналы' ? '' : '[group="'+$(e).attr('name')+'"]'))
+      .css('display', 'block');
+  }
+
+  function withoutepg_toggle(e) {
+    $('.group-item.active').find('.left').trigger('click');
+  }
+
   $.ajax({
-    url: '{{url_for("api.groupslist")}}?disable=false',
+    url: '{{url_for("api.groupslist")}}',
     async: true,
     dataType: 'json'
   }).done(function(xhr) {
     $('#select-groups')
-      .append($('<div class="group-item">')
-      .attr("name", "Все каналы")
-      .text("Все каналы"));
+      .append($('<div class="group-item active">').attr("name", "Все каналы")
+        .append($('<div class="left" onclick="usergroup_select(this)">')
+        .attr("name", "Все каналы").text("Все каналы"))
+        .append($('<div class="right">')
+          .append($('<label class="custom-control left-checkbox">')
+            .append('<input type="checkbox" class="custom-control-input" \
+                    onclick="withoutepg_toggle(this)" id="without-epg">')
+            .append('<span class="left-control-indicator">'))));
     xhr.groups.forEach(function(e, i, a) {
       $('#select-groups')
-        .append($('<div class="group-item">')
-        .attr("name",e.name)
-        .text(e.name));
+        .append($('<div class="group-item group">').attr("name",e.name)
+          .append($('<div class="left" onclick="usergroup_select(this)">')
+          .attr("name",e.name).text(e.name))
+          .append($('<div class="right">')
+            .append($('<label class="custom-control left-checkbox">')
+              .append('<input type="checkbox" class="custom-control-input" \
+                      onclick="usergroup_toggle(this)" \
+                      group_id="' + e.id + '" ' + (!e.disable ? 'checked="checked"': '') + '>')
+              .append('<span class="left-control-indicator">'))));
     });
-    $("div .group-item").click(function() {
-      Cookies.set('select_groups', $(this).attr('name'));
-      if ($(this).attr('name') == 'Все каналы') {
-        $(".content div.col-sm").css('display', 'block');
-      } else {
-        $(".content div.col-sm").css('display', 'none');
-        $('.content div.col-sm[group="'+$(this).attr('name')+'"]').css('display', 'block');
-      }
-    });
-    //if (!Cookies.get('select_groups') || Cookies.get('select_groups') == 'null') {
-    //  Cookies.set('select_groups', $("#select-groups option:first").val());
-    //}
+    //if (Cookies.get('select_groups') || Cookies.get('select_groups') != 'null') {}
     //$('#select-groups').val(Cookies.get('select_groups')).change();
     //$('#select-groups').val($("#select-groups option:first").val()).change();
   });

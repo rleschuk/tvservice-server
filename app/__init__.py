@@ -15,11 +15,13 @@ scheduler = APScheduler()
 
 
 login_manager = LoginManager()
-#login_manager.login_view = 'auth.login'
+login_manager.login_view = 'auth.login'
+
 @login_manager.request_loader
 def load_user_from_request(request):
     from .models import User
-    auth = request.headers.get('Authorization')
+    auth = request.args.get('key')
+    if not auth: auth = request.headers.get('Authorization')
     if auth:
         auth = auth.replace('Basic ', '', 1)
         try:
@@ -103,7 +105,7 @@ def init_errors(app):
     @app.errorhandler(403)
     def forbidden(error):
         handler = get_handler(403)
-        return handler(error) if handler else Response('forbidden', 403)
+        return handler(error) if handler else redirect(url_for('main.index'))
 
     @app.errorhandler(404)
     def not_found(error):

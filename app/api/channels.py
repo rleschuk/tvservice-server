@@ -3,38 +3,36 @@ from . import api
 from flask import request
 from flask_restful import Resource
 from flask_login import login_required, current_user
-from ..models import Channel, Group, UserChannels
-from ..utils import json_loads, format_data
+from sqlalchemy import or_, and_
+from ..models import Channel, Group, UserChannels, UserGroups
+from ..decorators import admin_required
+from ..utils import format_data
 from .. import db
 
 
 class ChannelsList(Resource):
 
-    @staticmethod
-    def get_query():
-        args = format_data(request.args.to_dict())
-        if current_user.is_administrator():
-            query = db.session.query(Channel)
-            query = query.outerjoin(Group, Group.id == Channel.group_id)
-            if isinstance(args.get('group_id'), int):
-                query = query.filter(Group.id == args['group_id'])
-            elif args.get('group_id') == 'null':
-                query = query.filter(Channel.group_id == None)
-            if isinstance(args.get('deleted'), (int, bool)):
-                query = query.filter(Channel.deleted == bool(args['deleted']))
-            if isinstance(args.get('disable'), (int, bool)):
-                query = query.filter(Channel.disable == bool(args['disable']))
-            if isinstance(args.get('group_disable'), (int, bool)):
-                query = query.filter(Group.disable == bool(args['group_disable']))
-        print(query)
-        query = query.order_by(Channel.name)
-        return query
-
     @login_required
+    @admin_required
     def get(self):
+        args = format_data(request.args.to_dict())
+        query = db.session.query(Channel)\
+            .outerjoin(Group, Channel.group_id == Group.id)\
+
+        if isinstance(args.get('group_id'), int):
+            query = query.filter(Group.id == args['group_id'])
+        elif args.get('group_id') is None:
+            query = query.filter(Channel.group_id == None)
+
+        if isinstance(args.get('deleted'), (int, bool)):
+            query = query.filter(Channel.deleted == bool(args['deleted']))
+        if isinstance(args.get('disable'), (int, bool)):
+            query = query.filter(Channel.disable == bool(args['disable']))
+
+        query = query.order_by(Channel.name)
         return {'channels': [
-            channel.to_dict(origins=request.args.get('origins', False))
-            for channel in self.get_query().all()
+            c.to_dict(origins=request.args.get('origins', False))
+            for c in query.all()
         ]}
 
 api.add_resource(ChannelsList, '/channels')
@@ -43,11 +41,13 @@ api.add_resource(ChannelsList, '/channels')
 class Channels(Resource):
 
     @login_required
+    @admin_required
     def get(self, channel_id):
         channel = Channel.query.filter_by(id=channel_id).first()
         return channel.to_dict(origins=True)
 
     @login_required
+    @admin_required
     def post(self, channel_id):
         data = request.get_json()
         channel = Channel.query.filter_by(id=channel_id).first()
@@ -61,3 +61,46 @@ class Channels(Resource):
         return channel.to_dict()
 
 api.add_resource(Channels, '/channels/<int:channel_id>')
+
+
+class UserChannelsList(Resource):
+
+    @staticmethod
+    def get_query():
+        query = db.session.query(Channel, UserChannels)\
+            .join(Group, Channel.group_id == Group.id)\
+            .outerjoin(UserChannels, and_(Channel.id == UserChannels.channel_id,
+                                          UserChannels.user_id == current_user.id))
+        subchann = db.session.query(Channel.id)\
+            .filter(Channel.deleted == False)\
+            .filter(Channel.disable == False)
+        subgroup = db.session.query(Group.id)\
+            .filter(Group.disable == False)
+        query = query.filter(Group.id.in_(subgroup))\
+                     .filter(Channel.id.in_(subchann))
+        query = query.filter(or_(UserGroups.disable == False,
+                                 UserGroups.disable == None))\
+                     .filter(or_(UserChannels.disable == False,
+                                 UserChannels.disable == None))
+        query = query.order_by(Channel.name)
+        return query
+
+    @login_required
+    def get(self):
+        query = self.get_query()
+        return {'channels': [
+            {**c.to_dict(), **(uc.to_dict() if uc else {})}
+            for c, uc in query.all()
+        ]}
+
+api.add_resource(UserChannelsList, '/userchannels')
+
+
+class UsersChannels(Resource):
+
+    @login_required
+    def get(self, channel_id):
+        channel = Channel.query.filter_by(id=channel_id).first()
+        return channel.to_dict(origins=True)
+
+api.add_resource(UsersChannels, '/userchannels/<int:channel_id>')

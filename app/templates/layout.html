@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{% block title %}{% endblock %}</title>
+    <title>TVService - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('static',filename='css/datatables.min.css') }}"/>
     <style>
@@ -175,8 +175,9 @@
     <script src="{{ url_for('static',filename='js/bootbox.min.js') }}"></script>
     <script type="text/javascript">
       function alert_error(xhr, status, error) {
-        console.error(error);
-        bootbox.alert(error);
+        if (xhr.responseJSON) {
+          bootbox.alert(xhr.responseJSON.error);
+        }
       }
     </script>
     {% block scripts %}{% endblock %}

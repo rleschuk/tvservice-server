@@ -1,47 +1,183 @@
 {% extends "layout.html" %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Регистрация{% endblock %}
 
 {% block styles %}
 <style>
+  html, body {
+    height: 100%;
+  }
+  label {
+    color: white;
+  }
+  a {
+    color: grey;
+    text-decoration: none;
+  }
+  a:hover {
+    color: white;
+    text-decoration: none;
+  }
+  .alert-message {
+    background-color: white;
+  }
   .content {
-    padding: 15px;
+    padding: 0px 15px 0px 15px;
+    height: 100%;
+  }
+  .content .center {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: black 0px 0px 6px 2px;
+    min-height: 100%;
+    margin: 0 auto;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
   }
-  .register {
-    background-color: #fff;
-    border-radius: 4px;
-    padding: 20px;
-    margin: auto;
-    min-height: 370px;
-    width: 350px;
+  .hello {
+    color: white;
+    padding: 20px 15px 20px 15px;
   }
-  .spacer {
+  .register {
     flex: 1;
+    padding: 80px 15px 20px 15px;
+  }
+  .alert {
+    margin-bottom: 5px;
+    padding: 5px 10px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .form-control {
+    color: white;
+  }
+  .custom-checkbox {
+    min-height: 1rem;
+    padding-left: 0;
+    margin-right: 15px;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  .custom-checkbox .custom-control-indicator {
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #818181;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    vertical-align: middle;
+    box-shadow: black 0px 0px 10px -1px;
+    top: -1px;
+    border-radius: 10px;
+  }
+  .custom-checkbox .custom-control-indicator:after {
+    content: "";
+    position: absolute;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background-color: #f1f1f1;
+    left: -2px;
+    top: -3px;
+    -webkit-transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    border-radius: 15px;
+    box-shadow: black 0px 0px 10px 0px;
+  }
+  .custom-checkbox .custom-control-input:checked ~ .custom-control-indicator {
+    background-color: #28a745;
+    background-image: none;
+  }
+  .custom-checkbox .custom-control-input:checked ~ .custom-control-indicator:after {
+    background-color: #f1f1f1;
+    left: 16px;
+  }
+  .href {
+    margin-left: -15px;
+    margin-right: -15px;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
+  .href:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+  .desc {
+    padding-bottom: 5px;
+  }
+  .top {
+    background-color: rgba(52,58,64,0.9);
+    height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-shadow: black 0px 0px 6px 0px;
+    z-index: 1050;
+    display: flex;
+  }
+  .top .header {
+    color: white;
+    height: 50px;
+    line-height: 52px;
+    font-size: 20pt;
+    margin-left: 10px;
+  }
+  .button {
+    height: 50px;
+    width: 50px;
+    color: white;
+    text-align: center;
+    line-height: 52px;
+    cursor: pointer;
+  }
+  .button:hover {
+    background-color: rgba(255,255,255,0.1);
   }
 </style>
 {% endblock %}
 
-{% block content %}
-{% from "_formhelpers.html" import render_field %}
-<div class="content">
-  <div class="spacer">{% include "include/flashes.html" %}</div>
-  <div class="register">
-    <div class="page-header"><h1>Регистрация</h1></div>
-    <form method="POST" action="/auth/register">
-      {{ form.csrf_token }}
-      {{ render_field(form.email) }}
-      {{ render_field(form.username) }}
-      {{ render_field(form.password) }}
-      {{ render_field(form.password2) }}
-      {{ form.submit(class_="btn btn-primary float-right") }}
-    </form>
-  </div>
-  <div class="spacer"></div>
-</div>
-{% endblock %}
+{% block body %}
+{% from "include/_formhelpers.html" import render_field %}
 
-{% block bottom %}
-{% include "include/footer.html" %}
+<div class="top">
+  <a href="{{ url_for('auth.login') }}">
+  <div class="button"><i class="fas fa-angle-double-left fa-lg"></i></div>
+  </a>
+  <div class="header">Регистрация</div>
+</div>
+
+<div class="content">
+  <div class="center">
+    <div class="register">
+      <form method="POST" action="/auth/register">
+        {{ form.csrf_token }}
+        {{ render_field(form.email) }}
+        {{ render_field(form.username) }}
+        {{ render_field(form.password) }}
+        {{ render_field(form.password2) }}
+        <div class="row" style="margin-top:20px">
+          <div class="col-sm">
+            {{ form.submit(class_="btn btn-primary btn-block") }}
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="text/javascript">
+  /*function show_login(e) {
+    $('.content').hide();
+    $(".login").css("top", 40);
+  }
+
+  if ($('.alert').length) {
+    $('.flashes').css('bottom', 0);
+    show_login();
+  }*/
+</script>
+
 {% endblock %}

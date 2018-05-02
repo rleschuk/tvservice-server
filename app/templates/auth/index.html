@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block styles %}
+<style>
+  .alert-message {
+    background-color: white;
+  }
+  .content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+  }
+  .login {
+    top: -400px;
+    left: 0;
+    right: 0;
+    position: fixed;
+    transition: top 0.5s;
+    padding: 20px;
+    z-index: 1050;
+  }
+  .login .dialog {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    margin: auto;
+    min-height: 300px;
+    min-width: 300px;
+    max-width: 400px;
+  }
+  .spacer {
+    flex: 1;
+  }
+  .flashes {
+    position: fixed;
+    bottom: -100px;
+    left: 10px;
+    right: 10px;
+    transition: bottom 0.5s;
+  }
+  label {
+    color: black;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+{% from "include/_formhelpers.html" import render_field %}
+
+<div class="login">
+  <div class="dialog">
+    <div class="page-header"><h1>Авторизация</h1></div>
+    <form method="POST" action="/auth/login">
+      {{ forms['login'].csrf_token }}
+      {{ render_field(forms['login'].username) }}
+      {{ render_field(forms['login'].password) }}
+      <div class="form-check">
+        {{ forms['login'].remember_me(class_="form-check-input") }}
+        {{ forms['login'].remember_me.label }}
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="col-sm">
+          {{ forms['login'].submit(class_="btn btn-primary btn-block") }}
+        </div>
+      </div>
+      <div class="row" style="margin-top:10px; font-size: 80%">
+        <div class="col">
+          <p><a href="{{ url_for('auth.password_reset_request') }}">Забыл пароль</a></p>
+          <p><a href="{{ url_for('auth.register') }}">Зарегистрироваться</a></p>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="content">
+  <div class="row" style="margin-top:10px">
+    <div class="col-sm">
+      <input class="btn btn-primary btn-block" onclick="show_login()" value="Войти">
+    </div>
+  </div>
+</div>
+
+<div class="flashes">
+  {% include "include/flashes.html" %}
+</div>
+
+<script type="text/javascript">
+  function show_login(e) {
+    $('.content').hide();
+    $(".login").css("top", 40);
+  }
+
+  if ($('.alert').length) {
+    $('.flashes').css('bottom', 0);
+    show_login();
+  }
+</script>
+
+{% endblock %}

@@ -41,4 +41,9 @@ def format_data(d):
         d = d.__str__()
     elif isinstance(d, datetime.timedelta):
         d = d.__str__()
-    return d
+    return json_loads(d)
+
+def xml_text(text):
+    text = text.replace('&','&amp;')
+    text = text.strip()
+    return text

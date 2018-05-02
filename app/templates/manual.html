@@ -1,0 +1,165 @@
+{% extends "layout.html" %}
+
+{% block title %}Инструкция{% endblock %}
+
+{% block styles %}
+<style>
+  html, body {
+    height: 100%;
+  }
+  a {
+    color: grey;
+    text-decoration: none;
+  }
+  a:hover {
+    color: white;
+    text-decoration: none;
+  }
+  .href {
+    margin-left: -15px;
+    margin-right: -15px;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
+  .href:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+  .content {
+    padding: 0px 15px 0px 15px;
+    height: 100%;
+  }
+  .content .center {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: black 0px 0px 6px 2px;
+    min-height: 100%;
+    margin: 0 auto;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .p {
+    color: white;
+    padding: 10px 15px 5px 15px;
+  }
+  .top {
+    background-color: rgba(52,58,64,0.9);
+    height: 50px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    box-shadow: black 0px 0px 6px 0px;
+    z-index: 1050;
+    display: flex;
+  }
+  .top .header {
+    color: white;
+    height: 50px;
+    line-height: 52px;
+    font-size: 20pt;
+    margin-left: 10px;
+  }
+  .button {
+    height: 50px;
+    width: 50px;
+    color: white;
+    text-align: center;
+    line-height: 52px;
+    cursor: pointer;
+  }
+  .button:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+  .screenshot {
+    border-radius: 5px;
+    width:100%;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="top">
+  <a href="{{ url_for('auth.login') }}">
+  <div class="button"><i class="fas fa-angle-double-left fa-lg"></i></div>
+  </a>
+  <div class="header">Инструкция</div>
+</div>
+
+<div class="content">
+  <div class="center">
+    <div class="p" style="padding-top: 70px;">
+      Данный сервис предоставляет возможность удобно просматривать более 1000 телеканалов на Вашем <a target="_blank" href="https://kodi.tv/download">Kodi.</a><br>
+      Каналы агрегированы с нескольких ресурсов и отдаются клиенту "PVR IPTV Simple" в виде m3u листа.<br>
+      Идея заключается в том, чтобы можно было просматривать телепрограмму с мобильного устройства и тут же переключать на нужный канал.
+    </div>
+    <div class="p" style="display:flex;">
+      <div style="flex:1"></div>
+      <div><img class="screenshot" style="max-width:250px" src="{{ url_for('static', filename='manual/screenshot1.png') }}" alt=""></div>
+      <div style="margin-left: -27px;margin-top: 10px;">
+        <img class="screenshot" style="max-width:250px" src="{{ url_for('static', filename='manual/screenshot2.png') }}" alt="">
+      </div>
+      <div style="flex:1"></div>
+    </div>
+    <div class="p" style="padding-bottom: 20px">
+      Итак, первое что необходимо это сам медиаплеер <a target="_blank" href="https://kodi.tv/download">Kodi.</a><br>
+      Сервис протестирован только на Kodi 17 и на ОС: <br>
+      - Linux,<br>
+      - LibreELEC (на Android TV Box - X96mini/1Gb),<br>
+      - Android (Android TV Box - X96mini/1Gb, Vontar Z5 Supermax/2Gb),<br>
+      - Windows.<br>
+      Для P2P потоков необходим клиент <a target="_blank" href="http://acestream.org/ru/">ACEStream версии 3.1.</a>
+      <br>
+      <br>
+      1. <a href="{{ url_for('auth.register') }}">Зарегистрироваться</a> на этом сервисе, чтобы можно было со станицы с телепрограммой управлять своими <a target="_blank" href="https://kodi.tv/download">Kodi.</a><br>
+      <font style="color:red; font-weight:bold">НА EMAIL АДРЕС НИКАКОГО СПАМА НЕ ОТПРАВЛЯЕТСЯ!!!</font><br><br>
+      2. <a href="https://github.com/rleschuk/kodirepo/raw/master/repository.rleschuk/repository.rleschuk-1.1.0.zip">Скачать</a> и установить репозиторий с плагином.<br>
+      Плагин представляет из себя небольшой web-сервис, который принимает запросы от клиента "PVR IPTV Simple" при запуске канала.
+      При получении запроса, плагин обращается к серверу за списком актуальных потоков с указанным каналом.
+      После получения потоков, плагин начинает проверять их доступность и при удачном тесте, перенаправляет запрос клиента "PVR IPTV Simple" на этот поток.
+      <br>
+      <br>
+      Итак, устанавливаем репозиторий:
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot3.png') }}" alt=""></div>
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot4.png') }}" alt=""></div>
+      <br>
+      После установки репозитория, устанавливаем плагин:<br>
+      Дополнения > Мои дополнения > Установить из репозитория > rleschuk Kodi Add-ons > Службы > TVService > Установить
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot5.png') }}" alt=""></div>
+      <br>
+      После установки и запуска плагина, плагин проверяет наличие в системе плагина "PVR IPTV Simple Client". Если он не установлен или выключен, появится следующее сообщение.
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot7.png') }}" alt=""></div>
+      <br>
+      В таком случае необходимо установить/включить плагин "PVR IPTV Simple Client"
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot8.png') }}" alt=""></div>
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot9.png') }}" alt=""></div>
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot10.png') }}" alt=""></div>
+      <br>
+      Открываем настройки плагина "TVService" и вводим свой логин/пароль, которые вводились при регистрации. Перезапускам плагин "TVService".
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot12.png') }}" alt=""></div>
+      <br>
+      При запуске, плагин проверит настройки "PVR IPTV Simple Client" и предложит изменить параметр с ссылкой на плейлист m3u с каналами.<br>
+      Отвечаем "ДА". После этого желательно перезапустить плагин "PVR IPTV Simple Client", чтобы он подтянул актуальный плейлист с каналами с сервера.
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot11.png') }}" alt=""></div>
+      <br><br>
+      3. После этого настройка завершена. "PVR IPTV Simple Client" подтянул каналы с сервера и их можно просматривать.
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot6.png') }}" alt=""></div>
+      <br>
+      Для удобства можно <a href="/">ВОЙТИ</a> под своими логин/паролем на данный сервис и добавить свой Kodi, нажав на зеленый крест сверху страницы.
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot13.png') }}" alt=""></div>
+      <div class="p"><img class="screenshot" src="{{ url_for('static', filename='manual/screenshot14.png') }}" alt=""></div>
+      <br>
+      Включать каналы можно кликом по изображению в ленте телепрограммы.
+      <div class="p" style="display:flex;">
+        <div style="padding-right:5px"><img style="max-width:250px" class="screenshot" src="{{ url_for('static', filename='manual/screenshot15.jpg') }}" alt=""></div>
+        <div style="padding-right:5px"><img style="max-width:250px" class="screenshot" src="{{ url_for('static', filename='manual/screenshot16.jpg') }}" alt=""></div>
+        <div><img style="max-width:250px" class="screenshot" src="{{ url_for('static', filename='manual/screenshot17.jpg') }}" alt=""></div>
+      </div>
+      <br>
+      <br>
+      P.S. Сервис дорабатывается по мере доступности свободного времени.
+      <br><br>
+    </div>
+  </div>
+</div>
+{% endblock %}

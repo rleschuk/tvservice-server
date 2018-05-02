@@ -11,7 +11,6 @@
     padding-bottom: 0px;
     width: calc(100% - 50px);
   }
-
   .col-sm {
     min-width: 250px;
     padding: 0px;
@@ -67,6 +66,9 @@
     flex-direction: column;
     position: relative;
     border-radius: 10px;
+  }
+  .without-epg {
+    display: none;
   }
   .epg_channel {
     color: white;
@@ -203,30 +205,47 @@
     let now = new Date();
     let now_ = now.getTime();
     data.epgs.forEach( function(e, i, a) {
-      let start_ = new Date(e.epg.date_start * 1000);
-      let stop_ = new Date(e.epg.date_stop * 1000);
-      let percent = Math.floor(100 * (now_ - (e.epg.date_start * 1000)) / ((e.epg.date_stop * 1000) - (e.epg.date_start * 1000)));
-      let art = e.epg.arts.length > 0 ? e.epg.arts[Math.floor(Math.random()*e.epg.arts.length)] : e.channel.logo;
-      $('.content').append($("<div></div>").attr("class","col-sm").attr("group",e.channel.group.name)
-        .append($('<div class="epg" start="'+e.epg.date_start+'" stop="'+e.epg.date_stop+'" id="'+e.channel.id+'">')
-          .append($('<div class="epg_art" style="background-image: url(' + art + ');">')
-            .append($('<div class="epg_channel">').html(e.channel.name))
-            .append($('<div class="epg_play" name="'+e.channel.name+'">')
-              .click(function(){KodiPlay(this)})))
-          .append($('<div class="epg_programm">')
-            .click(function(){ShowListEpgs(this)})
-            .append($('<div class="epg_progress" style="width:'+(percent > 100 ? 100 : percent)+'%">'))
-            .append($('<div name="title" class="epg_title">').html(e.epg.title))
-            .append($('<div name="cat" class="epg_cat">').html(e.epg.category)))));
-      if (!$('#scrollids').find('[name='+e.channel.name.charAt(0)+']').length) {
+      if (e.epg) {
+        let start_ = new Date(e.epg.date_start * 1000);
+        let stop_ = new Date(e.epg.date_stop * 1000);
+        let percent = Math.floor(100 * (now_ - (e.epg.date_start * 1000)) / ((e.epg.date_stop * 1000) - (e.epg.date_start * 1000)));
+        let art = e.epg.arts.length > 0 ? e.epg.arts[Math.floor(Math.random()*e.epg.arts.length)] : e.channel.logo;
+        $('.content').append($("<div></div>")
+          .attr("class","col-sm")
+          .attr("index",e.channel.name.charAt(0))
+          .attr("group",e.group.name)
+          .css("display", (e.group.disable ? 'none' : 'block'))
+          .append($('<div class="epg" start="'+e.epg.date_start+'" stop="'+e.epg.date_stop+'" id="'+e.channel.id+'">')
+            .append($('<div class="epg_art" style="background-image: url('+
+            (art ? art : '{{ url_for('static', filename='images/logos/unknow.png') }}')+');">')
+              .append($('<div class="epg_channel">').html(e.channel.name))
+              .append($('<div class="epg_play" name="'+e.channel.name+'">')
+                .click(function(){KodiPlay(this)})))
+            .append($('<div class="epg_programm">')
+              .click(function(){ShowListEpgs(this)})
+              .append($('<div class="epg_progress" style="width:'+(percent > 100 ? 100 : percent)+'%">'))
+              .append($('<div name="title" class="epg_title">').html(e.epg.title))
+              .append($('<div name="cat" class="epg_cat">').html(e.epg.category)))));
+      } else {
+        $('.content').append($("<div></div>")
+        .attr("class","col-sm without-epg")
+        .attr("index",e.channel.name.charAt(0))
+        .attr("group",e.group.name)
+          .append($('<div class="epg" id="'+e.channel.id+'">')
+            .append($('<div class="epg_art" style="background-image: url(' + e.channel.logo + ');">')
+              .append($('<div class="epg_channel">').html(e.channel.name))
+              .append($('<div class="epg_play" name="'+e.channel.name+'">')
+                .click(function(){KodiPlay(this)})))
+            ));
+      }
+      if (!$('#scrollids').find('[index='+e.channel.name.charAt(0)+']').length) {
         $('#scrollids')
           .append($('<div class="scrollid"></div>')
-          .attr("name", e.channel.name.charAt(0))
-          .attr("cid", e.channel.id)
+          .attr("index", e.channel.name.charAt(0))
           .text(e.channel.name.charAt(0))
           .click(function(){$("html").stop()
             .animate({
-              scrollTop: $("#" + $(this).attr("cid")).offset().top-54
+              scrollTop: $('div .col-sm[index="'+$(this).attr("index")+'"]:visible').offset().top-54
             }, 300, 'swing')
           }));
       }
@@ -286,7 +305,8 @@
           $("#" + channel.id).attr("start", epg.date_start);
           $("#" + channel.id).attr("stop", epg.date_stop);
           $("#" + channel.id).fadeOut(400, function() {
-            $("#" + channel.id).find(".epg_art").css('background-image','url('+art+')');
+            $("#" + channel.id).find(".epg_art").css('background-image','url('+
+              (art ? art : '{{ url_for('static', filename='images/logos/unknow.png') }}')+')');
             $("#" + channel.id).find(".epg_progress").css('width', progress + '%');
             $("#" + channel.id).find("[name=title]").text(epg.title);
             $("#" + channel.id).find("[name=cat]").text(epg.category);

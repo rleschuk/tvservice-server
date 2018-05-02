@@ -38,7 +38,8 @@ class Channel(db.Model):
             'epg_channel_id': self.epg_channel_id,
             'name': self.name,
             'normalize': self.normalize,
-            'logo': self.logo,
+            'logo': self.logo if self.logo else url_for('static',
+                filename='images/logos/unknow.png', _external=True),
             'disable': self.disable,
             'deleted': self.deleted,
             'group_name': self.group_name

@@ -1,50 +1,162 @@
 {% extends "layout.html" %}
 
-{% block title %}Confirm your account{% endblock %}
+{% block title %}Авторизация{% endblock %}
 
 {% block styles %}
 <style>
+  html, body {
+    height: 100%;
+  }
+  label {
+    color: white;
+  }
+  a {
+    color: grey;
+    text-decoration: none;
+  }
+  a:hover {
+    color: white;
+    text-decoration: none;
+  }
+  .alert-message {
+    background-color: white;
+  }
   .content {
-    padding: 15px;
+    padding: 0px 15px 0px 15px;
+    height: 100%;
+  }
+  .content .center {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: black 0px 0px 6px 2px;
+    min-height: 100%;
+    margin: 0 auto;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
   }
-  .unconfirmed {
-    background-color: #fff;
-    border-radius: 4px;
-    padding: 20px;
-    width: 50%;
-    margin: auto;
+  .hello {
+    color: white;
+    padding: 20px 15px 20px 15px;
   }
-  .spacer {
+  .login {
     flex: 1;
+    padding: 0 15px 20px 15px;
+  }
+  .alert {
+    margin-bottom: 5px;
+    padding: 5px 10px;
+  }
+  .form-group {
+    margin-bottom: 10px;
+  }
+  .form-control {
+    color: white;
+  }
+  .custom-checkbox {
+    min-height: 1rem;
+    padding-left: 0;
+    margin-right: 15px;
+    cursor: pointer;
+    margin-bottom: 0;
+  }
+  .custom-checkbox .custom-control-indicator {
+    content: "";
+    display: inline-block;
+    position: relative;
+    width: 40px;
+    height: 20px;
+    background-color: #818181;
+    -webkit-transition: background .3s ease;
+    transition: background .3s ease;
+    vertical-align: middle;
+    box-shadow: black 0px 0px 10px -1px;
+    top: -1px;
+    border-radius: 10px;
+  }
+  .custom-checkbox .custom-control-indicator:after {
+    content: "";
+    position: absolute;
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    background-color: #f1f1f1;
+    left: -2px;
+    top: -3px;
+    -webkit-transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    transition: left .3s ease, background .3s ease, box-shadow .1s ease;
+    border-radius: 15px;
+    box-shadow: black 0px 0px 10px 0px;
+  }
+  .custom-checkbox .custom-control-input:checked ~ .custom-control-indicator {
+    background-color: #28a745;
+    background-image: none;
+  }
+  .custom-checkbox .custom-control-input:checked ~ .custom-control-indicator:after {
+    background-color: #f1f1f1;
+    left: 16px;
+  }
+  .href {
+    margin-left: -15px;
+    margin-right: -15px;
+    padding: 5px 15px;
+    cursor: pointer;
+  }
+  .href:hover {
+    background-color: rgba(255,255,255,0.1);
+  }
+  .desc {
+    padding-bottom: 5px;
   }
 </style>
 {% endblock %}
 
-{% block content %}
+{% block body %}
+{% from "include/_formhelpers.html" import render_field %}
+
 <div class="content">
-  <div class="spacer"></div>
-  <div class="unconfirmed">
-    <div class="page-header">
-      <h1>
-          Hello, {{ current_user.username }}!
-      </h1>
-      <h3>You have not confirmed your account yet.</h3>
-      <p>
-          Before you can access this site you need to confirm your account.
-          Check your inbox, you should have received an email with a confirmation link.
-      </p>
-      <p>
-          Need another confirmation email?
-          <a href="{{ url_for('auth.resend_confirmation') }}">Click here</a>
-      </p>
+  <div class="center">
+    <div class="hello">
+      <h1>Привет, {{ current_user.username }}!</h1>
+      <div class="desc">
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      </div>
+      <a href="{{ url_for('main.manual') }}">
+        <div class="href">Инструкция по использованию</div>
+      </a>
+      <a href="https://github.com/rleschuk/kodirepo/raw/master/repository.rleschuk/repository.rleschuk-1.1.0.zip">
+        <div class="href">Репозиторий с клиентом для KODI</div>
+      </a>
+    </div>
+    <div class="unconfirmed">
+      <div class="page-header">
+        <h1>
+            Hello, {{ current_user.username }}!
+        </h1>
+        <h3>You have not confirmed your account yet.</h3>
+        <p>
+            Before you can access this site you need to confirm your account.
+            Check your inbox, you should have received an email with a confirmation link.
+        </p>
+        <p>
+            Need another confirmation email?
+            <a href="{{ url_for('auth.resend_confirmation') }}">Click here</a>
+        </p>
+      </div>
     </div>
   </div>
-  <div class="spacer"></div>
 </div>
-{% endblock %}
 
-{% block bottom %}
-{% include "include/footer.html" %}
+<script type="text/javascript">
+  /*function show_login(e) {
+    $('.content').hide();
+    $(".login").css("top", 40);
+  }
+
+  if ($('.alert').length) {
+    $('.flashes').css('bottom', 0);
+    show_login();
+  }*/
+</script>
+
 {% endblock %}
