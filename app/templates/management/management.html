@@ -475,7 +475,7 @@
     $(e).closest('.item').addClass('active');
     $('#row_channels').fadeOut(250, function() {
       $.ajax({
-        url: '{{ url_for("api.channelslist") }}?group_id=null',
+        url: '{{ url_for("api.channelslist") }}?deleted=false&group_id=null',
         async: false,
         dataType: 'json',
         success: function(data) {
