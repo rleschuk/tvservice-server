@@ -272,6 +272,7 @@
       success:function(data) {
         channels.cell(row,'name:name').data(data.name);
         channels.cell(row,'id:name').data(data.id);
+        console.log(data);
       },
       error:function(xhr, status, error) {alert_error(xhr, status, error)}
     });
@@ -288,6 +289,7 @@
       dataType: 'json',
       success:function(data) {
         channels.cell(row,'group_id:name').data(data.group_id);
+        console.log(data);
       },
       error:function(xhr, status, error) {alert_error(xhr, status, error)}
     });

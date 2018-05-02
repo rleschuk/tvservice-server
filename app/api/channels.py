@@ -53,6 +53,16 @@ class Channels(Resource):
         channel = Channel.query.filter_by(id=channel_id).first()
         if channel is None:
             return {'error': 'not found'}
+        if data.get('name'):
+            _channel = Channel.query.filter_by(name=data.get('name')).first()
+            if _channel:
+                for orig in channel.origins:
+                    orig.channel_id = _channel.id
+                    db.session.add(orig)
+                    db.session.commit()
+                db.session.delete(channel)
+                db.session.commit()
+                return _channel.to_dict()
         for key, value in data.items():
             if hasattr(channel, key):
                 setattr(channel, key, value)
