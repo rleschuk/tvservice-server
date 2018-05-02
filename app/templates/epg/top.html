@@ -293,6 +293,20 @@
     async: true,
     dataType: 'json'
   }).done(function(xhr) {
+    {% if current_user.username == 'demo' %}
+    $('#select-groups')
+      .append($('<div class="group-item active">').attr("name", "Все каналы")
+        .append($('<div class="left" onclick="usergroup_select(this)">')
+        .attr("name", "Все каналы").text("Все каналы"))
+        .append($('<div class="right">')));
+    xhr.groups.forEach(function(e, i, a) {
+      $('#select-groups')
+        .append($('<div class="group-item group">').attr("name",e.name)
+          .append($('<div class="left" onclick="usergroup_select(this)">')
+          .attr("name",e.name).text(e.name))
+          .append($('<div class="right">')));
+    });
+    {% else %}
     $('#select-groups')
       .append($('<div class="group-item active">').attr("name", "Все каналы")
         .append($('<div class="left" onclick="usergroup_select(this)">')
@@ -314,6 +328,7 @@
                       group_id="' + e.id + '" ' + (!e.disable ? 'checked="checked"': '') + '>')
               .append('<span class="left-control-indicator">'))));
     });
+    {% endif %}
     //if (Cookies.get('select_groups') || Cookies.get('select_groups') != 'null') {}
     //$('#select-groups').val(Cookies.get('select_groups')).change();
     //$('#select-groups').val($("#select-groups option:first").val()).change();
