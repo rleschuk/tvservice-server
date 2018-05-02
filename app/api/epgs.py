@@ -22,10 +22,9 @@ class EpgsList(Resource):
             .outerjoin(UserChannels, and_(Channel.id == UserChannels.channel_id,
                                           UserChannels.user_id == current_user.id))\
             .outerjoin(EpgChannel, Channel.epg_channel_id == EpgChannel.id)\
-            .outerjoin(Epg, Epg.epg_channel_id == EpgChannel.id)\
-            .filter(or_(and_(Epg.date_start <= db.func.now(),
-                             Epg.date_stop >= db.func.now()),
-                        Epg.date_start == None))\
+            .outerjoin(Epg, and_(Epg.epg_channel_id == EpgChannel.id,
+                                 and_(Epg.date_start <= db.func.now(),
+                                      Epg.date_stop >= db.func.now())))\
             .filter(or_(UserGroups.disable == False, UserGroups.disable == None))
         subchann = db.session.query(Channel.id)\
             .filter(Channel.deleted == False)
@@ -55,7 +54,7 @@ class Epgs(Resource):
             query = db.session.query(Epg)\
                 .join(EpgChannel, EpgChannel.id == Epg.epg_channel_id)\
                 .filter(EpgChannel.id == channel.epg_channel_id,
-                        Epg.date_stop > datetime.datetime.now())\
+                        Epg.date_stop > db.func.now())\
                 .order_by(Epg.date_start)\
                 .limit(limit if isinstance(limit, int) and limit > 0 else 1)
             return jsonify({
