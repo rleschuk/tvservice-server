@@ -16,6 +16,7 @@ from app import db
 from app.models import Origin, EpgChannel
 from app.utils import reformat
 from functools import reduce
+from sqlalchemy import text
 
 logger = logging.getLogger('app')
 
@@ -228,6 +229,9 @@ def load_origins(module=None):
     for r in get_resources(module):
         if hasattr(r['cls'], 'url') and r['cls'].url:
             try:
+                db.engine.execute(text('update origins set cost = 99 where resource = :resource')\
+                    .execution_options(autocommit=True),
+                    resource = r['obj'].module)
                 for origin in r['obj'].get_origins():
                     Origin.create_origin(**origin)
                 #db.session.commit()

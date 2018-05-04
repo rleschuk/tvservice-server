@@ -44,7 +44,7 @@ class Origin(db.Model):
 
     @staticmethod
     def create_origin(name=None, resource=None, **kwargs):
-        origin = Origin.query.filter_by(normalize=normalizing(name)).first()
+        origin = Origin.query.filter_by(name=name, resource=resource).first()
         if not origin:
             origin = Origin(name=name, resource=resource, **kwargs)
         else:
