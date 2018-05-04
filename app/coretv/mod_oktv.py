@@ -10,7 +10,7 @@ class Resource(ResourceBase):
             try:
                 yield {
                     'name': self.re.sub(
-                        '\s+cмотреть\s+онлайн.*', '',
+                        r'\s+[cс]мотреть\s+онлайн.*', '',
                         c.get('title'), flags=self.re.I).strip(),
                     'link': self.get_soup(self.url + c.get('href'))\
                                 .find('iframe').get('src'),

@@ -43,11 +43,12 @@ class Origin(db.Model):
         }
 
     @staticmethod
-    def create_origin(name=None, resource=None, **kwargs):
+    def create_origin(name, resource, **kwargs):
         origin = Origin.query.filter_by(name=name, resource=resource).first()
         if not origin:
             origin = Origin(name=name, resource=resource, **kwargs)
         else:
+            kwargs['normalize'] = normalizing(name)
             for k, v in kwargs.items():
                 if hasattr(origin, k):
                     setattr(origin, k, v)
@@ -55,20 +56,29 @@ class Origin(db.Model):
         db.session.commit()
 
         from . import Channel
-        channel = Channel.query.filter_by(normalize=origin.normalize).first()
-        if not channel:
-            _origin = Origin.query.filter_by(normalize=origin.normalize)\
-                .filter(Origin.channel_id is not None).first()
-            if _origin:
-                origin.channel = _origin.channel
+        if origin.channel_id is None:
+            channel = Channel.query.filter_by(normalize=origin.normalize).first()
+            if channel is None:
+                _origin = Origin.query.filter(Origin.normalize == origin.normalize,
+                                              Origin.channel_id != None).first()
+                if _origin:
+                    origin.channel_id = _origin.channel_id
+                else:
+                    channel = Channel(name=name)
+                    db.session.add(channel)
+                    db.session.commit()
+                    origin.channel_id = channel.id
             else:
-                channel = Channel(name=name)
-                channel.origins.append(origin)
-                db.session.add(channel)
-        elif not origin.channel:
-            origin.channel = channel
-        db.session.commit()
+                origin.channel_id = channel.id
+            db.session.add(origin)
+            db.session.commit()
         return origin
+
+    @staticmethod
+    def on_changed_name(target, value, oldvalue, initiator):
+        target.normalize = normalizing(value)
 
     def __repr__(self):
         return '<Origin %r>' % self.name
+
+db.event.listen(Origin.name, 'set', Origin.on_changed_name)

@@ -57,13 +57,9 @@ class Channel(db.Model):
             'app', 'static', 'images', 'logos', hash)
         for ext in ('png','jpg'):
             if os.path.exists('%s.%s' % (path, ext)):
-                return url_for('static',
-                    filename='images/logos/%s.%s' % (hash, ext),
-                    _external=True)
+                return 'images/logos/%s.%s' % (hash, ext)
         if self.logo and 'unknow.png' not in self.logo: return self.logo
-        return url_for('static',
-            filename='images/logos/unknow.png',
-            _external=True)
+        return
 
     @staticmethod
     def on_changed_name(target, value, oldvalue, initiator):
