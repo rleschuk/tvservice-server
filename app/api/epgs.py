@@ -77,8 +77,11 @@ class UserEpgsList(Resource):
                                           UserChannels.user_id == current_user.id))\
             .join(EpgChannel, Channel.epg_channel_id == EpgChannel.id)\
             .join(Epg, Epg.epg_channel_id == EpgChannel.id)\
-            .filter(Epg.date_stop >= db.func.now())\
-            .filter(or_(UserGroups.disable == False, UserGroups.disable == None))
+            .filter(Epg.date_stop >= db.func.now(),
+                    Epg.date_start <= datetime.datetime.now()+datetime.timedelta(days=1))\
+            .filter(or_(UserGroups.disable == False, 
+                        and_(UserGroups.disable == None,
+                             Group.disable == False)))
         subchann = db.session.query(Channel.id)\
             .filter(Channel.deleted == False)
         if not current_user.is_administrator():
@@ -88,6 +91,7 @@ class UserEpgsList(Resource):
             query = query.filter(Group.id.in_(subgroup))
         query = query.filter(Channel.id.in_(subchann))
         query = query.order_by(Channel.name)
+        print(query)
         return query
 
     @login_required

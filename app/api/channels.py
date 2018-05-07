@@ -1,7 +1,7 @@
 
 from . import api
 from flask import request
-from flask_restful import Resource
+from flask_restful import Resource, abort
 from flask_login import login_required, current_user
 from sqlalchemy import or_, and_
 from ..models import Channel, Group, UserChannels, UserGroups
@@ -50,7 +50,7 @@ class Channels(Resource):
         data = request.get_json()
         channel = Channel.query.filter_by(id=channel_id).first()
         if channel is None:
-            return {'error': 'not found'}
+            return {'error': 'not found'}, 404
         if data.get('name'):
             _channel = Channel.query.filter_by(name=data.get('name')).first()
             if _channel:
@@ -87,11 +87,13 @@ class UserChannelsList(Resource):
         subgroup = db.session.query(Group.id)\
             .filter(Group.disable == False)
         query = query.filter(Group.id.in_(subgroup))\
-                     .filter(Channel.id.in_(subchann))
-        query = query.filter(or_(UserGroups.disable == False,
-                                 UserGroups.disable == None))\
+                     .filter(Channel.id.in_(subchann))\
+                     .filter(or_(UserGroups.disable == False,
+                                 and_(UserGroups.disable == None,
+                                      Group.disable == False)))\
                      .filter(or_(UserChannels.disable == False,
-                                 UserChannels.disable == None))
+                                 and_(UserChannels.disable == None,
+                                      Channel.disable == False)))
         query = query.order_by(Channel.name)
         return query
 
@@ -111,6 +113,11 @@ class UsersChannels(Resource):
     @login_required
     def get(self, channel_id):
         channel = Channel.query.filter_by(id=channel_id).first()
-        return channel.to_dict(origins=True)
+        if channel:
+            return {**channel.to_dict(), **{'origins': [
+                o.to_dict() for o in channel.origins
+                if not o.deleted and not o.disable
+            ]}}
+        return {'error': 'not found'}, 404
 
 api.add_resource(UsersChannels, '/userchannels/<int:channel_id>')
